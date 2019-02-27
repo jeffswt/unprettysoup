@@ -24,16 +24,24 @@ namespace us3
         String(char*);
         String(const char*);
         String(char);
-        // Operators mimic std::string
+        // Property operators
         int length(void);
         String operator [] (const int&);
+        // Comparison operators
+        bool operator == (const String&);
+        bool operator != (const String&);
+        bool operator < (const String&);
+        bool operator > (const String&);
+        bool operator <= (const String&);
+        bool operator >= (const String&);
+        // Manipulative operators
         String operator + (const String&);
         String& operator += (const String&);
-        String operator * (const int&);
-        String& operator *= (const int&);
-        // Methods mimic Python
-        String join(const std::vector<String>&);
-        std::vector<String> split(const String&);
+        String operator * (const int&);  // Python
+        String& operator *= (const int&);  // Python
+        // Advanced methods
+        String join(const std::vector<String>&);  // Python
+        std::vector<String> split(const String&);  // Python
         // Input and output
         friend std::istream& operator >> (std::istream&, String&);
         friend std::ostream& operator << (std::ostream&, const String&);

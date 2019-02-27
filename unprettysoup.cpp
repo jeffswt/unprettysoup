@@ -47,6 +47,55 @@ us3::String us3::String::operator [] (const int& pos)
     return ret;
 }
 
+bool us3::String::operator == (const us3::String& str)
+{
+    if (this->contents.length() != str.contents.length())
+        return false;
+    for (int i = 0; i < this->contents.length(); i++)
+        if (this->contents[i] != str.contents[i])
+            return false;
+    return true;
+}
+
+bool us3::String::operator != (const us3::String& str)
+{
+    return !(*this == str);
+}
+
+bool us3::String::operator < (const us3::String& str)
+{
+    int len = std::min(this->contents.length(), str.contents.length());
+    for (int i = 0; i < len; i++) {
+        if (this->contents[i] > str.contents[i])
+            return false;
+        if (this->contents[i] < str.contents[i])
+            return true;
+    }
+    return this->length() < str.length();
+}
+
+bool us3::String::operator > (const us3::String& str)
+{
+    int len = std::min(this->contents.length(), str.contents.length());
+    for (int i = 0; i < len; i++) {
+        if (this->contents[i] < str.contents[i])
+            return false;
+        if (this->contents[i] > str.contents[i])
+            return true;
+    }
+    return this->length() > str.length();
+}
+
+bool us3::String::operator <= (const us3::String& str)
+{
+    return !(*this > str);
+}
+
+bool us3::String::operator >= (const us3::String& str)
+{
+    return !(*this < str);
+}
+
 us3::String us3::String::operator + (const us3::String& str)
 {
     us3::String ret;
@@ -115,5 +164,5 @@ int main()
     vector<us3::String> vec;
     for (int i = 0; i < 5; i++)
         vec.push_back(c);
-    cout << c[0] << endl;
+    cout << (us3::String("abc") == us3::String("abc")) << endl;
 }
