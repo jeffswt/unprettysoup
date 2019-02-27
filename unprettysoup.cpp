@@ -59,6 +59,27 @@ us3::String& us3::String::operator *= (const int& combo)
     return *this;
 }
 
+us3::String us3::String::join(const std::vector<us3::String>& list)
+{
+    us3::String result;
+    bool first = true;
+    for (auto str : list) {
+        if (!first)
+            result += *this;
+        else
+            first = false;
+        result += str;
+    }
+    return result;
+}
+
+std::vector<us3::String> us3::String::split(const us3::String& sep)
+{
+    std::vector<us3::String> result;
+    // TODO: Not yet implemented
+    return result;
+}
+
 std::istream& us3::operator >> (std::istream& stream, us3::String& str)
 {
     stream >> str.contents;
@@ -69,4 +90,15 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 {
     stream << str.contents;
     return stream;
+}
+
+int main()
+{
+    using namespace std;
+    us3::String a = "abc", b = "def";
+    us3::String c = a + b;
+    vector<us3::String> vec;
+    for (int i = 0; i < 5; i++)
+        vec.push_back(c);
+    cout << us3::String(" ").join(vec) << endl;
 }

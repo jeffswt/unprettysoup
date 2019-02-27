@@ -29,6 +29,10 @@ namespace us3
         String& operator += (const String&);
         String operator * (const int&);
         String& operator *= (const int&);
+        // Methods mimic Python
+        String join(const std::vector<String>&);
+        std::vector<String> split(const String&);
+        // Input and output
         friend std::istream& operator >> (std::istream&, String&);
         friend std::ostream& operator << (std::ostream&, const String&);
     };
