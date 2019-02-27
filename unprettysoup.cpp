@@ -27,9 +27,24 @@ us3::String::String(const char* str)
     return ;
 }
 
+us3::String::String(char chr)
+{
+    this->contents = std::string();
+    this->contents += chr;
+    return ;
+}
+
 int us3::String::length(void)
 {
     return this->contents.length();
+}
+
+us3::String us3::String::operator [] (const int& pos)
+{
+    if (pos < 0 || pos > this->length())
+        return us3::String();
+    us3::String ret(char(this->contents[pos]));  // UnUnicodely
+    return ret;
 }
 
 us3::String us3::String::operator + (const us3::String& str)
@@ -100,5 +115,5 @@ int main()
     vector<us3::String> vec;
     for (int i = 0; i < 5; i++)
         vec.push_back(c);
-    cout << us3::String(" ").join(vec) << endl;
+    cout << c[0] << endl;
 }

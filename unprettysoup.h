@@ -23,8 +23,10 @@ namespace us3
         String(std::string);
         String(char*);
         String(const char*);
+        String(char);
         // Operators mimic std::string
         int length(void);
+        String operator [] (const int&);
         String operator + (const String&);
         String& operator += (const String&);
         String operator * (const int&);
