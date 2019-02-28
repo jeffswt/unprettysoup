@@ -137,12 +137,12 @@ us3::String us3::String::join(const std::vector<us3::String>& list)
     return result;
 }
 
-std::vector<us3::String> us3::String::split(const us3::String& sep)
-{
-    std::vector<us3::String> result;
-    // TODO: Not yet implemented
-    return result;
-}
+// std::vector<us3::String> us3::String::split(const us3::String& sep)
+// {
+//     std::vector<us3::String> result;
+//     // TODO: Not yet implemented
+//     return result;
+// }
 
 std::istream& us3::operator >> (std::istream& stream, us3::String& str)
 {
