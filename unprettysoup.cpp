@@ -39,12 +39,11 @@ int us3::String::length(void)
     return this->contents.length();
 }
 
-us3::String us3::String::operator [] (const int& pos)
+us3::Char us3::String::operator [] (const int& pos)
 {
     if (pos < 0 || pos > this->length())
         return us3::String();
-    us3::String ret(char(this->contents[pos]));  // UnUnicodely
-    return ret;
+    return Char(this->contents[pos]);
 }
 
 bool us3::String::operator == (const us3::String& str)
@@ -105,7 +104,7 @@ us3::String us3::String::operator + (const us3::String& str)
 
 us3::String& us3::String::operator += (const us3::String& str)
 {
-    *this = *this + str;
+    *this += str;
     return *this;
 }
 
@@ -121,6 +120,35 @@ us3::String& us3::String::operator *= (const int& combo)
 {
     *this = *this * combo;
     return *this;
+}
+
+us3::String us3::String::casefold(void)
+{
+    return this->lower();
+}
+
+us3::String us3::String::lower(void)
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->operator[](i);
+        if (chr >= Char('A') && chr <= Char('Z'))
+            chr = chr - Char('A') + Char('a');
+        result += us3::String(chr);
+    }
+    return result;
+}
+
+us3::String us3::String::upper(void)
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->operator[](i);
+        if (chr >= Char('a') && chr <= Char('z'))
+            chr = chr - Char('a') + Char('A');
+        result += us3::String(chr);
+    }
+    return result;
 }
 
 us3::String us3::String::join(const std::vector<us3::String>& list)
