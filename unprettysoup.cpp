@@ -34,63 +34,63 @@ us3::String::String(char chr)
     return ;
 }
 
-int us3::String::length(void)
+int us3::String::length(void) const
 {
     return this->contents.length();
 }
-
-us3::Char us3::String::operator [] (const int& pos)
+ 
+us3::Char us3::String::operator [] (int pos) const
 {
     if (pos < 0 || pos > this->length())
-        return us3::String();
+        return Char(char(0));
     return Char(this->contents[pos]);
 }
 
-bool us3::String::operator == (const us3::String& str)
+bool us3::String::operator == (const us3::String& str) const
 {
-    if (this->contents.length() != str.contents.length())
+    if (this->length() != str.length())
         return false;
-    for (int i = 0; i < this->contents.length(); i++)
-        if (this->contents[i] != str.contents[i])
+    for (int i = 0; i < this->length(); i++)
+        if (this->operator[](i) != str[i])
             return false;
     return true;
 }
 
-bool us3::String::operator != (const us3::String& str)
+bool us3::String::operator != (const us3::String& str) const
 {
     return !(*this == str);
 }
 
-bool us3::String::operator < (const us3::String& str)
+bool us3::String::operator < (const us3::String& str) const
 {
-    int len = std::min(this->contents.length(), str.contents.length());
+    int len = std::min(this->length(), str.length());
     for (int i = 0; i < len; i++) {
-        if (this->contents[i] > str.contents[i])
+        if (this->operator[](i) > str[i])
             return false;
-        if (this->contents[i] < str.contents[i])
+        if (this->operator[](i) < str[i])
             return true;
     }
     return this->length() < str.length();
 }
 
-bool us3::String::operator > (const us3::String& str)
+bool us3::String::operator > (const us3::String& str) const
 {
-    int len = std::min(this->contents.length(), str.contents.length());
+    int len = std::min(this->length(), str.length());
     for (int i = 0; i < len; i++) {
-        if (this->contents[i] < str.contents[i])
+        if (this->operator[](i) < str[i])
             return false;
-        if (this->contents[i] > str.contents[i])
+        if (this->operator[](i) > str[i])
             return true;
     }
     return this->length() > str.length();
 }
 
-bool us3::String::operator <= (const us3::String& str)
+bool us3::String::operator <= (const us3::String& str) const
 {
     return !(*this > str);
 }
 
-bool us3::String::operator >= (const us3::String& str)
+bool us3::String::operator >= (const us3::String& str) const
 {
     return !(*this < str);
 }
@@ -139,18 +139,6 @@ us3::String us3::String::lower(void)
     return result;
 }
 
-us3::String us3::String::upper(void)
-{
-    us3::String result;
-    for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->operator[](i);
-        if (chr >= Char('a') && chr <= Char('z'))
-            chr = chr - Char('a') + Char('A');
-        result += us3::String(chr);
-    }
-    return result;
-}
-
 us3::String us3::String::join(const std::vector<us3::String>& list)
 {
     us3::String result;
@@ -172,6 +160,18 @@ us3::String us3::String::join(const std::vector<us3::String>& list)
 //     return result;
 // }
 
+us3::String us3::String::upper(void)
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->operator[](i);
+        if (chr >= Char('a') && chr <= Char('z'))
+            chr = chr - Char('a') + Char('A');
+        result += us3::String(chr);
+    }
+    return result;
+}
+
 std::istream& us3::operator >> (std::istream& stream, us3::String& str)
 {
     stream >> str.contents;
@@ -187,10 +187,12 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 int main()
 {
     using namespace std;
-    us3::String a = "abc", b = "def";
+    us3::String a = "abc", b = "卧槽";
     us3::String c = a + b;
+    for (int i = 0; i < b.length(); i++)
+        printf("%.2x\n", short(b[i]));
     vector<us3::String> vec;
     for (int i = 0; i < 5; i++)
         vec.push_back(c);
-    cout << (us3::String("abc") == us3::String("abc")) << endl;
+    return 0;
 }

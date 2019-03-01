@@ -26,15 +26,15 @@ namespace us3
         String(const char*);
         String(Char);
         // Property operators
-        int length(void);
-        Char operator [] (const int&);
+        int length(void) const;
+        Char operator [] (int) const;
         // Comparison operators
-        bool operator == (const String&);
-        bool operator != (const String&);
-        bool operator < (const String&);
-        bool operator > (const String&);
-        bool operator <= (const String&);
-        bool operator >= (const String&);
+        bool operator == (const String&) const;
+        bool operator != (const String&) const;
+        bool operator < (const String&) const;
+        bool operator > (const String&) const;
+        bool operator <= (const String&) const;
+        bool operator >= (const String&) const;
         // Manipulative operators
         String operator + (const String&);
         String& operator += (const String&);
@@ -61,12 +61,12 @@ namespace us3
         // String rjust(int, const String&);
         // String rstrip(const String&);
         // String rstrip(const std::vector<String>&);
+        // std::vector<String> split(const String&);
         // bool startswith(const String&);
         // String strip(const String&);
         // String strip(const std::vector<String>&);
         // String swapcase(void);
         String upper(void);
-        // std::vector<String> split(const String&);
         // Input and output
         friend std::istream& operator >> (std::istream&, String&);
         friend std::ostream& operator << (std::ostream&, const String&);
