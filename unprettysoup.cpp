@@ -335,12 +335,12 @@ us3::String& us3::String::operator *= (const int& combo)
     return *this;
 }
 
-us3::String us3::String::casefold(void)
+us3::String us3::String::casefold(void) const
 {
     return this->lower();
 }
 
-us3::String us3::String::lower(void)
+us3::String us3::String::lower(void) const
 {
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
@@ -352,7 +352,18 @@ us3::String us3::String::lower(void)
     return result;
 }
 
-us3::String us3::String::join(const std::vector<us3::String>& list)
+us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
+{
+    int left = 0, right = this->length() - 1;
+    while (left <= right) {
+        if (list.find(this->operator[](left)) == list.end())
+            break;
+        left++;
+    }
+    return this->substr(left, right);
+}
+
+us3::String us3::String::join(const std::vector<us3::String>& list) const
 {
     us3::String result;
     bool first = true;
@@ -366,6 +377,17 @@ us3::String us3::String::join(const std::vector<us3::String>& list)
     return result;
 }
 
+us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
+{
+    int left = 0, right = this->length() - 1;
+    while (right >= left) {
+        if (list.find(this->operator[](right)) == list.end())
+            break;
+        right--;
+    }
+    return this->substr(left, right);
+}
+
 // std::vector<us3::String> us3::String::split(const us3::String& sep)
 // {
 //     std::vector<us3::String> result;
@@ -373,18 +395,34 @@ us3::String us3::String::join(const std::vector<us3::String>& list)
 //     return result;
 // }
 
-us3::String us3::String::substr(int begin, int end)
+us3::String us3::String::strip(const std::set<us3::Char>& list) const
 {
-    begin = std::max(std::min(begin, int(this->length()) - 1), 0);
-    end = std::max(std::min(end, int(this->length()) - 1), 0);
+    int left = 0, right = this->length() - 1;
+    while (left <= right) {
+        if (list.find(this->operator[](left)) == list.end())
+            break;
+        left++;
+    }
+    while (right >= left) {
+        if (list.find(this->operator[](right)) == list.end())
+            break;
+        right--;
+    }
+    return this->substr(left, right);
+}
+
+us3::String us3::String::substr(int begin, int end) const
+{
     if (this->length() == 0 || end < begin)
         return us3::String();
+    begin = std::max(std::min(begin, int(this->length()) - 1), 0);
+    end = std::max(std::min(end, int(this->length()) - 1), 0);
     us3::String result;
     result.contents = this->contents.substr(begin, end - begin + 1);
     return result;
 }
 
-us3::String us3::String::upper(void)
+us3::String us3::String::upper(void) const
 {
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
@@ -413,14 +451,10 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 int main()
 {
     using namespace std;
-    std::string a = "abc测试", b = "这是一个字符串~";
-    us3::String au = a, bu = b;
-    cout << "std::string: " << a << " [length=" << a.length() << "]; us3::String: " <<
-        au << " [length=" << au.length() << "];\n";
-    cout << "std::string: " << b << " [length=" << b.length() << "]; us3::String: " <<
-        bu << " [length=" << bu.length() << "];\n";
-    us3::String c = au.upper();
-    c *= 5;
-    cout << c.substr(2, 3) << endl;
+    using namespace us3;
+    String a = "111222222211";
+    set<Char> st;
+    st.insert('1');
+    cout << a.strip(st) << endl;
     return 0;
 }

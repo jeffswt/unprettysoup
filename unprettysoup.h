@@ -81,7 +81,7 @@ namespace us3
         String operator * (const int&) const;  // Python
         String& operator *= (const int&);  // Python
         // Advanced methods (Python)
-        String casefold(void);
+        String casefold(void) const;
         // String count(int, int, int);
         // String endswith(const String&);
         // String expandtabs(int);
@@ -93,24 +93,24 @@ namespace us3
         // bool isnumeric(void);
         // bool isspace(void);
         // bool isupper(void);
-        String join(const std::vector<String>&);
+        String join(const std::vector<String>&) const;
         // String ljust(int, const String&);
-        String lower(void);
+        String lower(void) const;
         // String lstrip(const Char&);
         // String lstrip(const std::vector<Char>&);
-        String lstrip(const std::set<Char>&);
+        String lstrip(const std::set<Char>&) const;
         // String rjust(int, const String&);
         // String rstrip(const Char&);
         // String rstrip(const std::vector<Char>&);
-        String rstrip(const std::set<Char>&);
+        String rstrip(const std::set<Char>&) const;
         // std::vector<String> split(const String&);
         // bool startswith(const String&);
         // String strip(const Char&);
         // String strip(const std::vector<Char>&);
-        String strip(const std::set<Char>&);
-        String substr(int, int);
+        String strip(const std::set<Char>&) const;
+        String substr(int, int) const;
         // String swapcase(void);
-        String upper(void);
+        String upper(void) const;
         // Input and output
         friend std::istream& operator >> (std::istream&, String&);
         friend std::ostream& operator << (std::ostream&, const String&);
