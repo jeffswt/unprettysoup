@@ -127,6 +127,41 @@ us3::Char& us3::Char::operator -= (const us3::Char& chr)
     return *this;
 }
 
+std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
+{
+    char tmp;
+    unsigned long long result = 0;
+    int await = 0;
+    stream >> tmp;
+    if ((tmp >> 7) == 0x00) {
+        await = 0;
+        result = tmp & 0x7f;  // 0xxxxxxx
+    } else if ((tmp >> 5) == 0x06) {
+        await = 1;
+        result = tmp & 0x1f;  // 110xxxxx
+    } else if ((tmp >> 4) == 0x0e) {
+        await = 2;
+        result = tmp & 0x0f;  // 1110xxxx
+    } else if ((tmp >> 3) == 0x1e) {
+        await = 3;
+        result = tmp & 0x07;  // 11110xxx
+    }
+    while (await > 0) {
+        stream >> tmp;
+        result <<= 6;
+        result += tmp & 0x3f;  // 10xxxxxx
+        await--;
+    }
+    chr.value = result;
+    return stream;
+}
+
+std::ostream& us3::operator << (std::ostream& stream, const us3::Char& chr)
+{
+    stream << chr.to_string();
+    return stream;
+}
+
 us3::String::String(void)
 {
     this->contents = std::string();

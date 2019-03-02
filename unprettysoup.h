@@ -20,9 +20,10 @@ namespace us3
     class Char
     {
     protected:
-        void from_string(std::string, int&);
-    public:
         unsigned long long value;
+        void from_string(std::string, int&);
+        std::string to_string(void) const;
+    public:
         // Initializers
         Char(void);
         Char(char);
@@ -42,8 +43,8 @@ namespace us3
         Char operator - (const Char&) const;
         Char& operator -= (const Char&);
         // Input and output
-        // friend std::istream& operator >> (std::istream&, Char&);
-        // friend std::ostream& operator << (std::ostream&, const Char&);
+        friend std::istream& operator >> (std::istream&, Char&);
+        friend std::ostream& operator << (std::ostream&, const Char&);
     };
 
     class String
