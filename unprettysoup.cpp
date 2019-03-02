@@ -5,7 +5,7 @@
 void us3::Char::from_string(std::string bstr, int& pos)
 {
     this->value = 0;
-    if (pos >= bstr.length() - 1)
+    if (pos > bstr.length() - 1)
         return ;
     int ch1 = bstr[pos++] & 0xff, ch2, ch3, ch4;
     if ((ch1 >> 7) == 0x00) {
@@ -189,49 +189,68 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::Char& chr)
     return stream;
 }
 
+void us3::String::from_string(std::string str)
+{
+    this->contents.clear();
+    int pos = 0;
+    while (pos < str.length()) {
+        us3::Char chr(str, pos);
+        this->contents.push_back(chr);
+    }
+    return ;
+}
+
+std::string us3::String::to_string(void) const
+{
+    std::string output;
+    for (int i = 0; i < this->contents.length(); i++)
+        output += this->contents[i].to_string();
+    return output;
+}
+
 us3::String::String(void)
 {
-    this->contents = std::string();
+    this->contents.clear();
     return ;
 }
 
 us3::String::String(std::string str)
 {
-    std::cout << str << "\n";
-    this->contents = str;
+    this->from_string(str);
     return ;
 }
 
 us3::String::String(char* str)
 {
-    this->contents = "";
-    this->contents.assign(str, strlen(str));
+    std::string tmp;
+    tmp.assign(str, strlen(str));
+    this->from_string(tmp);
     return ;
 }
 
 us3::String::String(const char* str)
 {
-    this->contents = std::string(str);
+    this->from_string(std::string(str));
     return ;
 }
 
 us3::String::String(us3::Char chr)
 {
-    this->contents = std::string();
-    // this->contents += chr;
+    this->contents.clear();
+    this->contents.push_back(chr);
     return ;
 }
 
-int us3::String::length(void) const
+size_t us3::String::length(void) const
 {
     return this->contents.length();
 }
  
 us3::Char us3::String::operator [] (int pos) const
 {
-    if (pos < 0 || pos > this->length())
-        return us3::Char(char(0));
-    return us3::Char(this->contents[pos]);
+    if (pos < 0 || pos >= this->length())
+        return us3::Char();
+    return this->contents[pos];
 }
 
 bool us3::String::operator == (const us3::String& str) const
@@ -290,9 +309,15 @@ us3::String us3::String::operator + (const us3::String& str) const
     return ret;
 }
 
+us3::String& us3::String::operator += (const us3::Char& chr)
+{
+    this->contents.push_back(chr);
+    return *this;
+}
+
 us3::String& us3::String::operator += (const us3::String& str)
 {
-    *this += str;
+    this->contents += str.contents;
     return *this;
 }
 
@@ -322,7 +347,7 @@ us3::String us3::String::lower(void)
         us3::Char chr = this->operator[](i);
         if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
             chr = chr - us3::Char('A') + us3::Char('a');
-        result += us3::String(chr);
+        result += chr;
     }
     return result;
 }
@@ -355,33 +380,36 @@ us3::String us3::String::upper(void)
         us3::Char chr = this->operator[](i);
         if (chr >= us3::Char('a') && chr <= us3::Char('z'))
             chr = chr - us3::Char('a') + us3::Char('A');
-        result += us3::String(chr);
+        result += chr;
     }
     return result;
 }
 
 std::istream& us3::operator >> (std::istream& stream, us3::String& str)
 {
-    stream >> str.contents;
+    std::string tmp;
+    stream >> tmp;
+    str.from_string(tmp);
     return stream;
 }
 
 std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 {
-    stream << str.contents;
+    stream << str.to_string();
     return stream;
 }
 
 int main()
 {
     using namespace std;
-    // us3::String a = "abc", b = "卧槽";
-    // us3::String c = a + b;
-    // cout << c << endl;
-    us3::Char a(std::string("\u4e01"));
-    std::string c;
-    cin >> a;
-    // a = us3::Char(c);
-    cout << a << endl;
+    std::string a = "abc测试", b = "这是一个字符串~";
+    us3::String au = a, bu = b;
+    cout << "std::string: " << a << " [length=" << a.length() << "]; us3::String: " <<
+        au << " [length=" << au.length() << "];\n";
+    cout << "std::string: " << b << " [length=" << b.length() << "]; us3::String: " <<
+        bu << " [length=" << bu.length() << "];\n";
+    us3::String c = au.upper();
+    c *= 5;
+    cout << c << endl;
     return 0;
 }

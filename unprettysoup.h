@@ -52,11 +52,11 @@ namespace us3
     {
     private:
     protected:
-        std::string contents;
+        std::basic_string<Char> contents;
     public:
         // Converters
-        // void from_string(std::string);
-        // std::string to_string(void);
+        void from_string(std::string);
+        std::string to_string(void) const;
         // Initializers
         String(void);
         String(std::string);
@@ -64,7 +64,7 @@ namespace us3
         String(const char*);
         String(Char);
         // Property operators
-        int length(void) const;
+        size_t length(void) const;
         Char operator [] (int) const;
         // Comparison operators
         bool operator == (const String&) const;
@@ -75,6 +75,7 @@ namespace us3
         bool operator >= (const String&) const;
         // Manipulative operators
         String operator + (const String&) const;
+        String& operator += (const Char&);
         String& operator += (const String&);
         String operator * (const int&) const;  // Python
         String& operator *= (const int&);  // Python
