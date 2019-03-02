@@ -2,6 +2,73 @@
 #include "unprettysoup.h"
 
 
+us3::Char::Char(void)
+{
+    this->value = 0;
+    return ;
+}
+
+us3::Char::Char(unsigned long long value)
+{
+    this->value = value;
+    return ;
+}
+
+us3::Char::Char(std::string bstr)
+{
+    int pos = 0;
+    this->from_string(bstr, pos);
+    return ; 
+}
+
+us3::Char::Char(std::string bstr, int& pos)
+{
+    this->from_string(bstr, pos);
+    return ;
+}
+
+void us3::Char::from_string(std::string bstr, int& pos)
+{
+    this->value = 0;
+    if (pos > bstr.length() - 1)
+        return ;
+    char ch1 = bstr[pos++], ch2, ch3, ch4;
+    if ((ch1 >> 7) == 0x00) {
+        this->value += ch1 & 0x7f;  // 0xxxxxxx
+    } else if ((ch1 >> 5) == 0x06) {
+        if (pos > bstr.length() - 1)
+            return ;
+        ch2 = bstr[pos++];
+        this->value += ch1 & 0x1f;  // 110xxxxx
+        this->value <<= 6;
+        this->value += ch2 & 0x3f;  // 10xxxxxx
+    } else if ((ch1 >> 4) == 0x0e) {
+        if (pos > bstr.length() - 2)
+            return ;
+        ch2 = bstr[pos++];
+        ch3 = bstr[pos++];
+        this->value += ch1 & 0x0f;  // 1110xxxx
+        this->value <<= 6;
+        this->value += ch2 & 0x3f;  // 10xxxxxx
+        this->value <<= 6;
+        this->value += ch3 & 0x3f;  // 10xxxxxx
+    } else if ((ch1 >> 3) == 0x1e) {
+        if (pos > bstr.length() - 3)
+            return ;
+        ch2 = bstr[pos++];
+        ch3 = bstr[pos++];
+        ch4 = bstr[pos++];
+        this->value += ch1 & 0x07;  // 11110xxx
+        this->value <<= 6;
+        this->value += ch2 & 0x3f;  // 10xxxxxx
+        this->value <<= 6;
+        this->value += ch3 & 0x3f;  // 10xxxxxx
+        this->value <<= 6;
+        this->value += ch4 & 0x3f;  // 10xxxxxx
+    }
+    return ;
+}
+
 us3::String::String(void)
 {
     this->contents = std::string();

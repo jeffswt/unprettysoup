@@ -10,6 +10,11 @@
 #include <vector>
 
 
+#define bin(_x) (int(((_x) / 10000000 % 2) * 128 + ((_x) / 1000000 % 2) *\
+    64 + ((_x) / 100000 % 2) * 32 + ((_x) / 10000 % 2) * 16 +\
+    ((_x) / 1000 % 2) * 8 + ((_x) / 100 % 2) * 4 + ((_x) / 10 % 2) * 2 +\
+    ((_x) / 1 % 2) * 1))
+
 namespace us3
 {
     class Char
@@ -18,24 +23,25 @@ namespace us3
         unsigned long long value;
         // Initializers
         Char(void);
-        Char(char);
+        Char(unsigned long long);
         Char(std::string);
         Char(std::string, int&);
+        void from_string(std::string, int&);
         // Comparison operators
-        bool operator == (const Char&) const;
-        bool operator != (const Char&) const;
-        bool operator < (const Char&) const;
-        bool operator > (const Char&) const;
-        bool operator <= (const Char&) const;
-        bool operator >= (const Char&) const;
+        // bool operator == (const Char&) const;
+        // bool operator != (const Char&) const;
+        // bool operator < (const Char&) const;
+        // bool operator > (const Char&) const;
+        // bool operator <= (const Char&) const;
+        // bool operator >= (const Char&) const;
         // Manipulative operators
-        Char operator + (const Char&);
-        Char& operator += (const Char&);
-        Char operator - (const Char&);
-        Char& operator -= (const Char&);
+        // Char operator + (const Char&);
+        // Char& operator += (const Char&);
+        // Char operator - (const Char&);
+        // Char& operator -= (const Char&);
         // Input and output
-        friend std::istream& operator >> (std::istream&, Char&);
-        friend std::ostream& operator << (std::ostream&, const Char&);
+        // friend std::istream& operator >> (std::istream&, Char&);
+        // friend std::ostream& operator << (std::ostream&, const Char&);
     };
 
     class String
