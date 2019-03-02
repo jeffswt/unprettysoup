@@ -340,6 +340,29 @@ us3::String us3::String::casefold(void) const
     return this->lower();
 }
 
+int us3::String::count(const us3::String& pattern, int begin = 0,
+                       int end = -1) const
+{
+    int length = this->length(), plen = pattern.length();
+    if (plen == 0)
+        return length + 1;  // This is a special case
+    if (end == -1 || end >= length)
+        end = length - 1;
+    if (begin >= length || end < 0 || begin > end)
+        return 0;
+    int *next = pattern.find_kmp_get_next();
+    int pos = 0, res = 0;
+    while (pos <= end) {
+        pos = this->find(pattern, next, pos);
+        if (pos == -1 || pos + plen - 1 > end)
+            break;
+        res++;
+        pos += plen;
+    }
+    delete next;
+    return res;
+}
+
 bool us3::String::endswith(const us3::String& str) const
 {
     int length = this->length(), slen = str.length();
@@ -348,6 +371,7 @@ bool us3::String::endswith(const us3::String& str) const
 
 int* us3::String::find_kmp_get_next(void) const
 {
+    // This function requires destruction of array!
     int len = this->length();
     int *next = new int[len];
     next[0] = -1;
@@ -492,12 +516,30 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
     return this->substr(left, right);
 }
 
-// std::vector<us3::String> us3::String::split(const us3::String& sep)
-// {
-//     std::vector<us3::String> result;
-//     // TODO: Not yet implemented
-//     return result;
-// }
+std::vector<us3::String> us3::String::split(const us3::String& pattern)
+{
+    std::vector<us3::String> result;
+    int length = this->length(), plen = pattern.length();
+    if (plen == 0)
+        return result;  // In Python this should throw an exception instead
+    int *next = pattern.find_kmp_get_next();
+    int pos = 0, last_pos = 0;
+    bool is_first = true;
+    while (pos < length) {
+        pos = this->find(pattern, next, pos);
+        if (pos == -1)
+            break;
+        if (!is_first || pos > last_pos)
+            result.push_back(this->substr(last_pos, pos - 1));
+        pos += plen;
+        last_pos = pos;
+        is_first = false;
+    }
+    if (last_pos < length - 1)
+        result.push_back(this->substr(last_pos, length - 1));
+    delete next;
+    return result;
+}
 
 bool us3::String::startswith(const us3::String& str) const
 {
@@ -591,14 +633,9 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "aabaaaabaaaaabaaaaab", b = "aaab";
-    int pos = 0;
-    while (pos != -1) {
-        pos = a.find(b, pos);
-        cout << pos << endl;
-        if (pos == -1)
-            break;
-        pos += b.length();
-    }
+    String a = "test on  splitting", b = " ";
+    vector<String> vec = a.split(b);
+    for (String a : vec)
+        cout << "'" << a << "'\n";
     return 0;
 }

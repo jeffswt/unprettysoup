@@ -82,7 +82,7 @@ namespace us3
         String& operator *= (const int&);  // Python
         // Advanced methods (Python)
         String casefold(void) const;
-        // String count(int, int, int);
+        int count(const String&, int, int) const;
         bool endswith(const String&) const;
         // String expandtabs(int);
         int* find_kmp_get_next(void) const;
@@ -106,7 +106,7 @@ namespace us3
         String rstrip(const Char&) const;
         String rstrip(const std::vector<Char>&) const;
         String rstrip(const std::set<Char>&) const;
-        // std::vector<String> split(const String&);
+        std::vector<String> split(const String&);
         bool startswith(const String&) const;
         String strip(const Char&) const;
         String strip(const std::vector<Char>&) const;
