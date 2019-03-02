@@ -20,10 +20,10 @@ namespace us3
     class Char
     {
     protected:
-        unsigned long long value;
         void from_string(std::string, int&);
         std::string to_string(void) const;
     public:
+        unsigned long long value;
         // Initializers
         Char(void);
         Char(char);

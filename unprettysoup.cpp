@@ -2,24 +2,6 @@
 #include "unprettysoup.h"
 
 
-us3::Char::Char(void)
-{
-    this->value = 0;
-    return ;
-}
-
-us3::Char::Char(char value)
-{
-    this->value = value;
-    return ;
-}
-
-us3::Char::Char(unsigned long long value)
-{
-    this->value = value;
-    return ;
-}
-
 void us3::Char::from_string(std::string bstr, int& pos)
 {
     this->value = 0;
@@ -59,6 +41,46 @@ void us3::Char::from_string(std::string bstr, int& pos)
         this->value <<= 6;
         this->value += ch4 & 0x3f;  // 10xxxxxx
     }
+    return ;
+}
+
+std::string us3::Char::to_string(void) const
+{
+    unsigned long long value = this->value;
+    std::string output = "";
+    if (value >= 0x0000 && value <= 0x007f) {
+        output += char((value & 0x7f) ^ 0x00);
+    } else if (value >= 0x0080 && value <= 0x07ff) {
+        output += char(((value >> 6) & 0x1f) ^ 0xc0);
+        output += char((value & 0x3f) ^ 0x80);
+    } else if (value >= 0x0800 && value <= 0xffff) {
+        output += char(((value >> 12) & 0x0f) ^ 0xe0);
+        output += char(((value >> 6) & 0x3f) ^ 0x80);
+        output += char((value & 0x3f) ^ 0x80);
+    } else if (value >= 0x10000 && value <= 0x10ffff) {
+        output += char(((value >> 18) & 0x07) ^ 0xf0);
+        output += char(((value >> 12) & 0x3f) ^ 0x80);
+        output += char(((value >> 6) & 0x3f) ^ 0x80);
+        output += char((value & 0x3f) ^ 0x80);
+    }
+    return output;
+}
+
+us3::Char::Char(void)
+{
+    this->value = 0;
+    return ;
+}
+
+us3::Char::Char(char value)
+{
+    this->value = value;
+    return ;
+}
+
+us3::Char::Char(unsigned long long value)
+{
+    this->value = value;
     return ;
 }
 
@@ -170,6 +192,7 @@ us3::String::String(void)
 
 us3::String::String(std::string str)
 {
+    std::cout << str << "\n";
     this->contents = str;
     return ;
 }
@@ -190,7 +213,7 @@ us3::String::String(const char* str)
 us3::String::String(us3::Char chr)
 {
     this->contents = std::string();
-    this->contents += chr;
+    // this->contents += chr;
     return ;
 }
 
@@ -347,8 +370,10 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 int main()
 {
     using namespace std;
-    us3::String a = "abc", b = "卧槽";
-    us3::String c = a + b;
-    cout << c << endl;
+    // us3::String a = "abc", b = "卧槽";
+    // us3::String c = a + b;
+    // cout << c << endl;
+    us3::Char a(std::string("人"));
+    cout << a.value << endl;
     return 0;
 }
