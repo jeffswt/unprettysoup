@@ -85,7 +85,7 @@ namespace us3
         void clear(void);
         int count(const String&, int, int) const;
         bool endswith(const String&) const;
-        // String expandtabs(int);
+        String expandtabs(int) const;
         int* find_kmp_get_next(void) const;
         int find(const String&, int*, int) const;
         int find(const String&, int) const;

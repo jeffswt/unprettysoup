@@ -177,7 +177,7 @@ std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
             return stream;
         result <<= 6;
         result += tmp & 0x3f;  // 10xxxxxx
-        await--;
+        await -= 1;
     }
     chr.value = result;
     return stream;
@@ -362,7 +362,7 @@ int us3::String::count(const us3::String& pattern, int begin = 0,
         pos = this->find(pattern, next, pos);
         if (pos == -1 || pos + plen - 1 > end)
             break;
-        res++;
+        res += 1;
         pos += plen;
     }
     delete next;
@@ -373,6 +373,26 @@ bool us3::String::endswith(const us3::String& str) const
 {
     int length = this->length(), slen = str.length();
     return slen <= length && this->substr(length - slen, length - 1) == str;
+}
+
+us3::String us3::String::expandtabs(int tabsize = 4) const
+{
+    us3::String result;
+    int wpos = 0;
+    for (us3::Char chr : this->contents) {
+        if (chr == us3::Char('\r') || chr == us3::Char('\n')) {
+            wpos = 0;
+            result += chr;
+        } else if (chr == us3::Char('\t')) {
+            int dist = tabsize - wpos % tabsize;
+            wpos += dist;
+            result += us3::String(" ") * dist;
+        } else {
+            wpos += 1;
+            result += chr;
+        }
+    }
+    return result;
 }
 
 int* us3::String::find_kmp_get_next(void) const
@@ -402,10 +422,10 @@ int us3::String::find(const us3::String& pattern, int* next, int begin) const
     int i = begin, j = 0;
     for (; i < len_main && j < len_patt; ) {
         if (this->contents[i] == pattern.contents[j]) {
-            i++;
-            j++;
+            i += 1;
+            j += 1;
         } else if (j == 0) {
-            i++;
+            i += 1;
         } else {
             j = next[j - 1] + 1;
         }
@@ -568,7 +588,7 @@ us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
     while (left <= right) {
         if (list.find(this->contents[left]) == list.end())
             break;
-        left++;
+        left += 1;
     }
     return this->substr(left, right);
 }
@@ -642,7 +662,7 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
     while (right >= left) {
         if (list.find(this->contents[right]) == list.end())
             break;
-        right--;
+        right -= 1;
     }
     return this->substr(left, right);
 }
@@ -695,12 +715,12 @@ us3::String us3::String::strip(const std::set<us3::Char>& list) const
     while (left <= right) {
         if (list.find(this->contents[left]) == list.end())
             break;
-        left++;
+        left += 1;
     }
     while (right >= left) {
         if (list.find(this->contents[right]) == list.end())
             break;
-        right--;
+        right -= 1;
     }
     return this->substr(left, right);
 }
@@ -760,8 +780,7 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "ababaaaab", b = "a";
-    String c = a.replace("ab", "cd");
-    cout << c << endl;
+    String a = "abcd\tdef\nabcdef\tgh", b = "a";
+    cout << a.expandtabs() << endl;
     return 0;
 }
