@@ -340,6 +340,12 @@ us3::String us3::String::casefold(void) const
     return this->lower();
 }
 
+bool us3::String::endswith(const us3::String& str) const
+{
+    int length = this->length(), slen = str.length();
+    return slen <= length && this->substr(length - slen, length - 1) == str;
+}
+
 us3::String us3::String::lower(void) const
 {
     us3::String result;
@@ -425,6 +431,12 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
 //     return result;
 // }
 
+bool us3::String::startswith(const us3::String& str) const
+{
+    int length = this->length(), slen = str.length();
+    return slen <= length && this->substr(0, slen - 1) == str;
+}
+
 us3::String us3::String::strip(const us3::Char& chr) const
 {
     std::set<us3::Char> st;
@@ -467,6 +479,20 @@ us3::String us3::String::substr(int begin, int end) const
     return result;
 }
 
+us3::String us3::String::swapcase(void) const
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->operator[](i);
+        if (chr >= us3::Char('a') && chr <= us3::Char('z'))
+            chr = chr - us3::Char('a') + us3::Char('A');
+        else if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
+            chr = chr - us3::Char('A') + us3::Char('a');
+        result += chr;
+    }
+    return result;
+}
+
 us3::String us3::String::upper(void) const
 {
     us3::String result;
@@ -497,8 +523,8 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "わたしわ本当に最低だわ";
+    String a = "abCAbcA";
     cout << a << ' ' << a.length() << endl;
-    cout << a.strip(Char("わ")) << endl;
+    cout << a.swapcase() << endl;
     return 0;
 }

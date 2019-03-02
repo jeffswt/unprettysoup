@@ -83,7 +83,7 @@ namespace us3
         // Advanced methods (Python)
         String casefold(void) const;
         // String count(int, int, int);
-        // String endswith(const String&);
+        bool endswith(const String&) const;
         // String expandtabs(int);
         // bool isalnum(void);
         // bool isalpha(void);
@@ -104,12 +104,12 @@ namespace us3
         String rstrip(const std::vector<Char>&) const;
         String rstrip(const std::set<Char>&) const;
         // std::vector<String> split(const String&);
-        // bool startswith(const String&);
+        bool startswith(const String&) const;
         String strip(const Char&) const;
         String strip(const std::vector<Char>&) const;
         String strip(const std::set<Char>&) const;
         String substr(int, int) const;
-        // String swapcase(void);
+        String swapcase(void) const;
         String upper(void) const;
         // Input and output
         friend std::istream& operator >> (std::istream&, String&);
