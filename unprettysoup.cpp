@@ -340,6 +340,12 @@ us3::String us3::String::casefold(void) const
     return this->lower();
 }
 
+void us3::String::clear(void)
+{
+    this->contents.clear();
+    return ;
+}
+
 int us3::String::count(const us3::String& pattern, int begin = 0,
                        int end = -1) const
 {
@@ -581,6 +587,23 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
     return result;
 }
 
+us3::String us3::String::replace(const us3::String& pattern,
+                                 const us3::String& replace,
+                                 int count = 0) const
+{
+    // Leave count <= 0 to replace all occurences, elsewise replace the first
+    // (count) occurences.
+    std::vector<us3::String> parts = this->split(pattern);
+    us3::String result = parts[0];
+    for (int i = 1; i < parts.size(); i++) {
+        if (count <= 0 || i <= count)
+            result += replace + parts[i];
+        else
+            result += pattern + parts[i];
+    }
+    return result;
+}
+
 us3::String us3::String::reversed(void) const
 {
     us3::String result;
@@ -624,7 +647,7 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
     return this->substr(left, right);
 }
 
-std::vector<us3::String> us3::String::split(const us3::String& pattern)
+std::vector<us3::String> us3::String::split(const us3::String& pattern) const
 {
     std::vector<us3::String> result;
     int length = this->length(), plen = pattern.length();
@@ -632,19 +655,15 @@ std::vector<us3::String> us3::String::split(const us3::String& pattern)
         return result;  // In Python this should throw an exception instead
     int *next = pattern.find_kmp_get_next();
     int pos = 0, last_pos = 0;
-    bool is_first = true;
     while (pos < length) {
         pos = this->find(pattern, next, pos);
         if (pos == -1)
             break;
-        if (!is_first || pos > last_pos)
-            result.push_back(this->substr(last_pos, pos - 1));
+        result.push_back(this->substr(last_pos, pos - 1));
         pos += plen;
         last_pos = pos;
-        is_first = false;
     }
-    if (last_pos < length - 1)
-        result.push_back(this->substr(last_pos, length - 1));
+    result.push_back(this->substr(last_pos, length - 1));
     delete next;
     return result;
 }
@@ -741,7 +760,8 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "aaabbbbbbbccc", b = "a";
-    cout << a.find_first_not_of(b) << endl;
+    String a = "ababaaaab", b = "a";
+    String c = a.replace("ab", "cd");
+    cout << c << endl;
     return 0;
 }
