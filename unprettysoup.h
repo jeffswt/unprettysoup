@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include <vector>
+#include <set>
 
 
 #define bin(_x) (int(((_x) / 10000000 % 2) * 128 + ((_x) / 1000000 % 2) *\
@@ -95,15 +96,19 @@ namespace us3
         String join(const std::vector<String>&);
         // String ljust(int, const String&);
         String lower(void);
-        // String lstrip(const String&);
-        // String lstrip(const std::vector<String>&);
+        // String lstrip(const Char&);
+        // String lstrip(const std::vector<Char>&);
+        String lstrip(const std::set<Char>&);
         // String rjust(int, const String&);
-        // String rstrip(const String&);
-        // String rstrip(const std::vector<String>&);
+        // String rstrip(const Char&);
+        // String rstrip(const std::vector<Char>&);
+        String rstrip(const std::set<Char>&);
         // std::vector<String> split(const String&);
         // bool startswith(const String&);
-        // String strip(const String&);
-        // String strip(const std::vector<String>&);
+        // String strip(const Char&);
+        // String strip(const std::vector<Char>&);
+        String strip(const std::set<Char>&);
+        String substr(int, int);
         // String swapcase(void);
         String upper(void);
         // Input and output

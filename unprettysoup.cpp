@@ -373,6 +373,17 @@ us3::String us3::String::join(const std::vector<us3::String>& list)
 //     return result;
 // }
 
+us3::String us3::String::substr(int begin, int end)
+{
+    begin = std::max(std::min(begin, int(this->length()) - 1), 0);
+    end = std::max(std::min(end, int(this->length()) - 1), 0);
+    if (this->length() == 0 || end < begin)
+        return us3::String();
+    us3::String result;
+    result.contents = this->contents.substr(begin, end - begin + 1);
+    return result;
+}
+
 us3::String us3::String::upper(void)
 {
     us3::String result;
@@ -410,6 +421,6 @@ int main()
         bu << " [length=" << bu.length() << "];\n";
     us3::String c = au.upper();
     c *= 5;
-    cout << c << endl;
+    cout << c.substr(2, 3) << endl;
     return 0;
 }
