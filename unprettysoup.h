@@ -30,17 +30,17 @@ namespace us3
         Char(std::string);
         Char(std::string, int&);
         // Comparison operators
-        // bool operator == (const Char&) const;
-        // bool operator != (const Char&) const;
-        // bool operator < (const Char&) const;
-        // bool operator > (const Char&) const;
-        // bool operator <= (const Char&) const;
-        // bool operator >= (const Char&) const;
+        bool operator == (const Char&) const;
+        bool operator != (const Char&) const;
+        bool operator < (const Char&) const;
+        bool operator > (const Char&) const;
+        bool operator <= (const Char&) const;
+        bool operator >= (const Char&) const;
         // Manipulative operators
-        // Char operator + (const Char&);
-        // Char& operator += (const Char&);
-        // Char operator - (const Char&);
-        // Char& operator -= (const Char&);
+        Char operator + (const Char&) const;
+        Char& operator += (const Char&);
+        Char operator - (const Char&) const;
+        Char& operator -= (const Char&);
         // Input and output
         // friend std::istream& operator >> (std::istream&, Char&);
         // friend std::ostream& operator << (std::ostream&, const Char&);
@@ -69,9 +69,9 @@ namespace us3
         bool operator <= (const String&) const;
         bool operator >= (const String&) const;
         // Manipulative operators
-        String operator + (const String&);
+        String operator + (const String&) const;
         String& operator += (const String&);
-        String operator * (const int&);  // Python
+        String operator * (const int&) const;  // Python
         String& operator *= (const int&);  // Python
         // Advanced methods (Python)
         String casefold(void);

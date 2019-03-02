@@ -20,19 +20,6 @@ us3::Char::Char(unsigned long long value)
     return ;
 }
 
-us3::Char::Char(std::string bstr)
-{
-    int pos = 0;
-    this->from_string(bstr, pos);
-    return ; 
-}
-
-us3::Char::Char(std::string bstr, int& pos)
-{
-    this->from_string(bstr, pos);
-    return ;
-}
-
 void us3::Char::from_string(std::string bstr, int& pos)
 {
     this->value = 0;
@@ -73,6 +60,71 @@ void us3::Char::from_string(std::string bstr, int& pos)
         this->value += ch4 & 0x3f;  // 10xxxxxx
     }
     return ;
+}
+
+us3::Char::Char(std::string bstr)
+{
+    int pos = 0;
+    this->from_string(bstr, pos);
+    return ; 
+}
+
+us3::Char::Char(std::string bstr, int& pos)
+{
+    this->from_string(bstr, pos);
+    return ;
+}
+
+bool us3::Char::operator == (const us3::Char& chr) const
+{
+    return this->value == chr.value;
+}
+
+bool us3::Char::operator != (const us3::Char& chr) const
+{
+    return this->value != chr.value;
+}
+
+bool us3::Char::operator < (const us3::Char& chr) const
+{
+    return this->value < chr.value;
+}
+
+bool us3::Char::operator > (const us3::Char& chr) const
+{
+    return this->value > chr.value;
+}
+
+bool us3::Char::operator <= (const us3::Char& chr) const
+{
+    return this->value <= chr.value;
+}
+
+bool us3::Char::operator >= (const us3::Char& chr) const
+{
+    return this->value >= chr.value;
+}
+
+us3::Char us3::Char::operator + (const us3::Char& chr) const
+{
+    return us3::Char(this->value + chr.value);
+}
+
+us3::Char& us3::Char::operator += (const us3::Char& chr)
+{
+    this->value += chr.value;
+    return *this;
+}
+
+us3::Char us3::Char::operator - (const us3::Char& chr) const
+{
+    return us3::Char(this->value - chr.value);
+}
+
+us3::Char& us3::Char::operator -= (const us3::Char& chr)
+{
+    this->value -= chr.value;
+    return *this;
 }
 
 us3::String::String(void)
@@ -168,7 +220,7 @@ bool us3::String::operator >= (const us3::String& str) const
     return !(*this < str);
 }
 
-us3::String us3::String::operator + (const us3::String& str)
+us3::String us3::String::operator + (const us3::String& str) const
 {
     us3::String ret;
     ret.contents = this->contents + str.contents;
@@ -181,7 +233,7 @@ us3::String& us3::String::operator += (const us3::String& str)
     return *this;
 }
 
-us3::String us3::String::operator * (const int& combo)
+us3::String us3::String::operator * (const int& combo) const
 {
     us3::String ret;
     for (int i = 0; i < combo; i++)
@@ -205,8 +257,8 @@ us3::String us3::String::lower(void)
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
         us3::Char chr = this->operator[](i);
-        if (chr >= Char('A') && chr <= Char('Z'))
-            chr = chr - Char('A') + Char('a');
+        if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
+            chr = chr - us3::Char('A') + us3::Char('a');
         result += us3::String(chr);
     }
     return result;
@@ -238,8 +290,8 @@ us3::String us3::String::upper(void)
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
         us3::Char chr = this->operator[](i);
-        if (chr >= Char('a') && chr <= Char('z'))
-            chr = chr - Char('a') + Char('A');
+        if (chr >= us3::Char('a') && chr <= us3::Char('z'))
+            chr = chr - us3::Char('a') + us3::Char('A');
         result += us3::String(chr);
     }
     return result;
