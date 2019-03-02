@@ -151,10 +151,12 @@ us3::Char& us3::Char::operator -= (const us3::Char& chr)
 
 std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
 {
-    char tmp;
+    char _tmp;
+    int tmp;
     unsigned long long result = 0;
     int await = 0;
-    stream >> tmp;
+    stream >> _tmp;
+    tmp = int(_tmp) & 0xff;
     if ((tmp >> 7) == 0x00) {
         await = 0;
         result = tmp & 0x7f;  // 0xxxxxxx
@@ -169,7 +171,10 @@ std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
         result = tmp & 0x07;  // 11110xxx
     }
     while (await > 0) {
-        stream >> tmp;
+        stream >> _tmp;
+        tmp = int(_tmp) & 0xff;
+        if ((tmp >> 6) != 0x03)
+            return stream;
         result <<= 6;
         result += tmp & 0x3f;  // 10xxxxxx
         await--;
@@ -374,7 +379,9 @@ int main()
     // us3::String c = a + b;
     // cout << c << endl;
     us3::Char a(std::string("\u4e01"));
-    cout << "丁" << endl;
+    std::string c;
+    cin >> a;
+    // a = us3::Char(c);
     cout << a << endl;
     return 0;
 }
