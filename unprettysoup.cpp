@@ -5,23 +5,23 @@
 void us3::Char::from_string(std::string bstr, int& pos)
 {
     this->value = 0;
-    if (pos > bstr.length() - 1)
+    if (pos >= bstr.length() - 1)
         return ;
-    char ch1 = bstr[pos++], ch2, ch3, ch4;
+    int ch1 = bstr[pos++] & 0xff, ch2, ch3, ch4;
     if ((ch1 >> 7) == 0x00) {
         this->value += ch1 & 0x7f;  // 0xxxxxxx
     } else if ((ch1 >> 5) == 0x06) {
         if (pos > bstr.length() - 1)
             return ;
-        ch2 = bstr[pos++];
+        ch2 = bstr[pos++] & 0xff;
         this->value += ch1 & 0x1f;  // 110xxxxx
         this->value <<= 6;
         this->value += ch2 & 0x3f;  // 10xxxxxx
     } else if ((ch1 >> 4) == 0x0e) {
         if (pos > bstr.length() - 2)
             return ;
-        ch2 = bstr[pos++];
-        ch3 = bstr[pos++];
+        ch2 = bstr[pos++] & 0xff;
+        ch3 = bstr[pos++] & 0xff;
         this->value += ch1 & 0x0f;  // 1110xxxx
         this->value <<= 6;
         this->value += ch2 & 0x3f;  // 10xxxxxx
@@ -30,9 +30,9 @@ void us3::Char::from_string(std::string bstr, int& pos)
     } else if ((ch1 >> 3) == 0x1e) {
         if (pos > bstr.length() - 3)
             return ;
-        ch2 = bstr[pos++];
-        ch3 = bstr[pos++];
-        ch4 = bstr[pos++];
+        ch2 = bstr[pos++] & 0xff;
+        ch3 = bstr[pos++] & 0xff;
+        ch4 = bstr[pos++] & 0xff;
         this->value += ch1 & 0x07;  // 11110xxx
         this->value <<= 6;
         this->value += ch2 & 0x3f;  // 10xxxxxx
@@ -373,7 +373,8 @@ int main()
     // us3::String a = "abc", b = "卧槽";
     // us3::String c = a + b;
     // cout << c << endl;
-    us3::Char a(std::string("人"));
-    cout << a.value << endl;
+    us3::Char a(std::string("\u4e01"));
+    cout << "丁" << endl;
+    cout << a << endl;
     return 0;
 }
