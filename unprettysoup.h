@@ -20,13 +20,15 @@ namespace us3
     class Char
     {
     protected:
+        void from_string(std::string, int&);
+    public:
         unsigned long long value;
         // Initializers
         Char(void);
+        Char(char);
         Char(unsigned long long);
         Char(std::string);
         Char(std::string, int&);
-        void from_string(std::string, int&);
         // Comparison operators
         // bool operator == (const Char&) const;
         // bool operator != (const Char&) const;

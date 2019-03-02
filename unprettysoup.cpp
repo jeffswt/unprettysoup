@@ -8,6 +8,12 @@ us3::Char::Char(void)
     return ;
 }
 
+us3::Char::Char(char value)
+{
+    this->value = value;
+    return ;
+}
+
 us3::Char::Char(unsigned long long value)
 {
     this->value = value;
@@ -94,7 +100,7 @@ us3::String::String(const char* str)
     return ;
 }
 
-us3::String::String(char chr)
+us3::String::String(us3::Char chr)
 {
     this->contents = std::string();
     this->contents += chr;
@@ -109,8 +115,8 @@ int us3::String::length(void) const
 us3::Char us3::String::operator [] (int pos) const
 {
     if (pos < 0 || pos > this->length())
-        return Char(char(0));
-    return Char(this->contents[pos]);
+        return us3::Char(char(0));
+    return us3::Char(this->contents[pos]);
 }
 
 bool us3::String::operator == (const us3::String& str) const
@@ -256,10 +262,6 @@ int main()
     using namespace std;
     us3::String a = "abc", b = "卧槽";
     us3::String c = a + b;
-    for (int i = 0; i < b.length(); i++)
-        printf("%.2x\n", short(b[i]));
-    vector<us3::String> vec;
-    for (int i = 0; i < 5; i++)
-        vec.push_back(c);
+    cout << c << endl;
     return 0;
 }
