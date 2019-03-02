@@ -352,6 +352,21 @@ us3::String us3::String::lower(void) const
     return result;
 }
 
+us3::String us3::String::lstrip(const us3::Char& chr) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->lstrip(st);
+}
+
+us3::String us3::String::lstrip(const std::vector<us3::Char>& list) const
+{
+    std::set<us3::Char> st;
+    for (auto i : list)
+        st.insert(i);
+    return this->lstrip(st);
+}
+
 us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
 {
     int left = 0, right = this->length() - 1;
@@ -377,6 +392,21 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
     return result;
 }
 
+us3::String us3::String::rstrip(const us3::Char& chr) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->rstrip(st);
+}
+
+us3::String us3::String::rstrip(const std::vector<us3::Char>& list) const
+{
+    std::set<us3::Char> st;
+    for (auto i : list)
+        st.insert(i);
+    return this->rstrip(st);
+}
+
 us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
 {
     int left = 0, right = this->length() - 1;
@@ -394,6 +424,21 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
 //     // TODO: Not yet implemented
 //     return result;
 // }
+
+us3::String us3::String::strip(const us3::Char& chr) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->strip(st);
+}
+
+us3::String us3::String::strip(const std::vector<us3::Char>& list) const
+{
+    std::set<us3::Char> st;
+    for (auto i : list)
+        st.insert(i);
+    return this->strip(st);
+}
 
 us3::String us3::String::strip(const std::set<us3::Char>& list) const
 {
@@ -452,9 +497,8 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "111222222211";
-    set<Char> st;
-    st.insert('1');
-    cout << a.strip(st) << endl;
+    String a = "わたしわ本当に最低だわ";
+    cout << a << ' ' << a.length() << endl;
+    cout << a.strip(Char("わ")) << endl;
     return 0;
 }
