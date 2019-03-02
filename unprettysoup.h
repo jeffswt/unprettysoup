@@ -94,12 +94,12 @@ namespace us3
         // bool isspace(void);
         // bool isupper(void);
         String join(const std::vector<String>&) const;
-        // String ljust(int, const String&);
+        String ljust(int, const Char&) const;
         String lower(void) const;
         String lstrip(const Char&) const;
         String lstrip(const std::vector<Char>&) const;
         String lstrip(const std::set<Char>&) const;
-        // String rjust(int, const String&);
+        String rjust(int, const Char&) const;
         String rstrip(const Char&) const;
         String rstrip(const std::vector<Char>&) const;
         String rstrip(const std::set<Char>&) const;

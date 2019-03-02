@@ -346,6 +346,15 @@ bool us3::String::endswith(const us3::String& str) const
     return slen <= length && this->substr(length - slen, length - 1) == str;
 }
 
+us3::String us3::String::ljust(int len,
+                               const us3::Char& chr = us3::Char(' ')) const
+{
+    int alen = this->length();
+    if (len <= alen)
+        return *this;
+    return *this + us3::String(chr) * (len - alen);
+}
+
 us3::String us3::String::lower(void) const
 {
     us3::String result;
@@ -396,6 +405,15 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
         result += str;
     }
     return result;
+}
+
+us3::String us3::String::rjust(int len,
+                               const us3::Char& chr = us3::Char(' ')) const
+{
+    int alen = this->length();
+    if (len <= alen)
+        return *this;
+    return us3::String(chr) * (len - alen) + *this;
 }
 
 us3::String us3::String::rstrip(const us3::Char& chr) const
@@ -525,6 +543,6 @@ int main()
     using namespace us3;
     String a = "abCAbcA";
     cout << a << ' ' << a.length() << endl;
-    cout << a.swapcase() << endl;
+    cout << a.swapcase().rjust(9) << endl;
     return 0;
 }
