@@ -420,16 +420,46 @@ int us3::String::find(const us3::String& pattern, int begin = 0) const
     return res;
 }
 
-int us3::String::find_first_of(const std::set<us3::Char> list,
+int us3::String::find_first_of(const us3::Char& chr, int begin = 0) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->find_first_of(st, begin);
+}
+
+int us3::String::find_first_of(const us3::String& list, int begin = 0) const
+{
+    std::set<us3::Char> st;
+    for (auto chr : list.contents)
+        st.insert(chr);
+    return this->find_first_of(st, begin);
+}
+
+int us3::String::find_first_of(const std::set<us3::Char>& list,
                                int begin = 0) const
 {
-    for (int i = max(begin, 0); i < this->length(); i++)
+    for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) != list.end())
             return i;
     return -1;
 }
 
-int us3::String::find_last_of(const std::set<us3::Char> list,
+int us3::String::find_last_of(const us3::Char& chr, int end = -1) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->find_last_of(st, end);
+}
+
+int us3::String::find_last_of(const us3::String& list, int end = -1) const
+{
+    std::set<us3::Char> st;
+    for (auto chr : list.contents)
+        st.insert(chr);
+    return this->find_last_of(st, end);
+}
+
+int us3::String::find_last_of(const std::set<us3::Char>& list,
                                int end = -1) const
 {
     if (end == -1 || end >= this->length())
@@ -440,16 +470,46 @@ int us3::String::find_last_of(const std::set<us3::Char> list,
     return -1;
 }
 
-int us3::String::find_first_not_of(const std::set<us3::Char> list,
+int us3::String::find_first_not_of(const us3::Char& chr, int begin = 0) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->find_first_not_of(st, begin);
+}
+
+int us3::String::find_first_not_of(const us3::String& list, int begin = 0) const
+{
+    std::set<us3::Char> st;
+    for (auto chr : list.contents)
+        st.insert(chr);
+    return this->find_first_not_of(st, begin);
+}
+
+int us3::String::find_first_not_of(const std::set<us3::Char>& list,
                                int begin = 0) const
 {
-    for (int i = max(begin, 0); i < this->length(); i++)
+    for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) == list.end())
             return i;
     return -1;
 }
 
-int us3::String::find_last_not_of(const std::set<us3::Char> list,
+int us3::String::find_last_not_of(const us3::Char& chr, int end = -1) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->find_last_not_of(st, end);
+}
+
+int us3::String::find_last_not_of(const us3::String& list, int end = -1) const
+{
+    std::set<us3::Char> st;
+    for (auto chr : list.contents)
+        st.insert(chr);
+    return this->find_last_not_of(st, end);
+}
+
+int us3::String::find_last_not_of(const std::set<us3::Char>& list,
                                int end = -1) const
 {
     if (end == -1 || end >= this->length())
@@ -681,9 +741,7 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "test on  splitting", b = " ";
-    vector<String> vec = a.split(b);
-    for (String a : vec)
-        cout << "'" << a << "'\n";
+    String a = "aaabbbbbbbccc", b = "a";
+    cout << a.find_first_not_of(b) << endl;
     return 0;
 }
