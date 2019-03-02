@@ -258,7 +258,7 @@ bool us3::String::operator == (const us3::String& str) const
     if (this->length() != str.length())
         return false;
     for (int i = 0; i < this->length(); i++)
-        if (this->operator[](i) != str[i])
+        if (this->contents[i] != str.contents[i])
             return false;
     return true;
 }
@@ -272,9 +272,9 @@ bool us3::String::operator < (const us3::String& str) const
 {
     int len = std::min(this->length(), str.length());
     for (int i = 0; i < len; i++) {
-        if (this->operator[](i) > str[i])
+        if (this->contents[i] > str.contents[i])
             return false;
-        if (this->operator[](i) < str[i])
+        if (this->contents[i] < str.contents[i])
             return true;
     }
     return this->length() < str.length();
@@ -284,9 +284,9 @@ bool us3::String::operator > (const us3::String& str) const
 {
     int len = std::min(this->length(), str.length());
     for (int i = 0; i < len; i++) {
-        if (this->operator[](i) < str[i])
+        if (this->contents[i] < str.contents[i])
             return false;
-        if (this->operator[](i) > str[i])
+        if (this->contents[i] > str.contents[i])
             return true;
     }
     return this->length() > str.length();
@@ -346,6 +346,56 @@ bool us3::String::endswith(const us3::String& str) const
     return slen <= length && this->substr(length - slen, length - 1) == str;
 }
 
+int* us3::String::find_kmp_get_next(void) const
+{
+    int len = this->length();
+    int *next = new int[len];
+    next[0] = -1;
+    for (int i = 1; i < len; i++) {
+        for (int j = next[i - 1]; ; j = next[j]) {
+            if (this->contents[j + 1] == this->contents[i]) {
+                next[i] = j + 1;
+                break;
+            } else if (j == -1) {
+                next[i] = -1;
+                break;
+            }
+        }
+    }
+    return next;
+}
+
+int us3::String::find(const us3::String& pattern, int* next, int begin) const
+{
+    // Returns -1 if not found
+    int len_main = this->length(), len_patt = pattern.length();
+    int i = begin, j = 0;
+    for (; i < len_main && j < len_patt; ) {
+        if (this->contents[i] == pattern.contents[j]) {
+            i++;
+            j++;
+        } else if (j == 0) {
+            i++;
+        } else {
+            j = next[j - 1] + 1;
+        }
+    }
+    if (j == len_patt)
+        return i - len_patt;
+    return -1;
+}
+
+int us3::String::find(const us3::String& pattern, int begin = 0) const
+{
+    // Returns -1 if not found
+    if (begin + pattern.length() > this->length())
+        return -1;
+    int *next = pattern.find_kmp_get_next();
+    int res = this->find(pattern, next, begin);
+    delete next;
+    return res;
+}
+
 us3::String us3::String::ljust(int len,
                                const us3::Char& chr = us3::Char(' ')) const
 {
@@ -359,7 +409,7 @@ us3::String us3::String::lower(void) const
 {
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->operator[](i);
+        us3::Char chr = this->contents[i];
         if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
             chr = chr - us3::Char('A') + us3::Char('a');
         result += chr;
@@ -386,7 +436,7 @@ us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
 {
     int left = 0, right = this->length() - 1;
     while (left <= right) {
-        if (list.find(this->operator[](left)) == list.end())
+        if (list.find(this->contents[left]) == list.end())
             break;
         left++;
     }
@@ -435,7 +485,7 @@ us3::String us3::String::rstrip(const std::set<us3::Char>& list) const
 {
     int left = 0, right = this->length() - 1;
     while (right >= left) {
-        if (list.find(this->operator[](right)) == list.end())
+        if (list.find(this->contents[right]) == list.end())
             break;
         right--;
     }
@@ -474,12 +524,12 @@ us3::String us3::String::strip(const std::set<us3::Char>& list) const
 {
     int left = 0, right = this->length() - 1;
     while (left <= right) {
-        if (list.find(this->operator[](left)) == list.end())
+        if (list.find(this->contents[left]) == list.end())
             break;
         left++;
     }
     while (right >= left) {
-        if (list.find(this->operator[](right)) == list.end())
+        if (list.find(this->contents[right]) == list.end())
             break;
         right--;
     }
@@ -501,7 +551,7 @@ us3::String us3::String::swapcase(void) const
 {
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->operator[](i);
+        us3::Char chr = this->contents[i];
         if (chr >= us3::Char('a') && chr <= us3::Char('z'))
             chr = chr - us3::Char('a') + us3::Char('A');
         else if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
@@ -515,7 +565,7 @@ us3::String us3::String::upper(void) const
 {
     us3::String result;
     for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->operator[](i);
+        us3::Char chr = this->contents[i];
         if (chr >= us3::Char('a') && chr <= us3::Char('z'))
             chr = chr - us3::Char('a') + us3::Char('A');
         result += chr;
@@ -541,8 +591,14 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "abCAbcA";
-    cout << a << ' ' << a.length() << endl;
-    cout << a.swapcase().rjust(9) << endl;
+    String a = "aabaaaabaaaaabaaaaab", b = "aaab";
+    int pos = 0;
+    while (pos != -1) {
+        pos = a.find(b, pos);
+        cout << pos << endl;
+        if (pos == -1)
+            break;
+        pos += b.length();
+    }
     return 0;
 }

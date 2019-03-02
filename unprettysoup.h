@@ -85,6 +85,9 @@ namespace us3
         // String count(int, int, int);
         bool endswith(const String&) const;
         // String expandtabs(int);
+        int* find_kmp_get_next(void) const;
+        int find(const String&, int*, int) const;
+        int find(const String&, int) const;
         // bool isalnum(void);
         // bool isalpha(void);
         // bool isdecimal(void);
