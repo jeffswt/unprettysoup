@@ -12,7 +12,32 @@
 
 namespace us3
 {
-    typedef char Char;
+    class Char
+    {
+    protected:
+        unsigned long long value;
+        // Initializers
+        Char(void);
+        Char(char);
+        Char(std::string);
+        Char(std::string, int&);
+        // Comparison operators
+        bool operator == (const Char&) const;
+        bool operator != (const Char&) const;
+        bool operator < (const Char&) const;
+        bool operator > (const Char&) const;
+        bool operator <= (const Char&) const;
+        bool operator >= (const Char&) const;
+        // Manipulative operators
+        Char operator + (const Char&);
+        Char& operator += (const Char&);
+        Char operator - (const Char&);
+        Char& operator -= (const Char&);
+        // Input and output
+        friend std::istream& operator >> (std::istream&, Char&);
+        friend std::ostream& operator << (std::ostream&, const Char&);
+    };
+
     class String
     {
     private:
@@ -72,6 +97,8 @@ namespace us3
         friend std::ostream& operator << (std::ostream&, const String&);
     };
 
+    std::istream& operator >> (std::istream&, Char&);
+    std::ostream& operator << (std::ostream&, const Char&);
     std::istream& operator >> (std::istream&, String&);
     std::ostream& operator << (std::ostream&, const String&);
 } // us3
