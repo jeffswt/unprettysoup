@@ -420,6 +420,46 @@ int us3::String::find(const us3::String& pattern, int begin = 0) const
     return res;
 }
 
+int us3::String::find_first_of(const std::set<us3::Char> list,
+                               int begin = 0) const
+{
+    for (int i = max(begin, 0); i < this->length(); i++)
+        if (list.find(this->contents[i]) != list.end())
+            return i;
+    return -1;
+}
+
+int us3::String::find_last_of(const std::set<us3::Char> list,
+                               int end = -1) const
+{
+    if (end == -1 || end >= this->length())
+        end = this->length() - 1;
+    for (int i = end; i >= 0; i--)
+        if (list.find(this->contents[i]) != list.end())
+            return i;
+    return -1;
+}
+
+int us3::String::find_first_not_of(const std::set<us3::Char> list,
+                               int begin = 0) const
+{
+    for (int i = max(begin, 0); i < this->length(); i++)
+        if (list.find(this->contents[i]) == list.end())
+            return i;
+    return -1;
+}
+
+int us3::String::find_last_not_of(const std::set<us3::Char> list,
+                               int end = -1) const
+{
+    if (end == -1 || end >= this->length())
+        end = this->length() - 1;
+    for (int i = end; i >= 0; i--)
+        if (list.find(this->contents[i]) == list.end())
+            return i;
+    return -1;
+}
+
 us3::String us3::String::ljust(int len,
                                const us3::Char& chr = us3::Char(' ')) const
 {
@@ -448,10 +488,10 @@ us3::String us3::String::lstrip(const us3::Char& chr) const
     return this->lstrip(st);
 }
 
-us3::String us3::String::lstrip(const std::vector<us3::Char>& list) const
+us3::String us3::String::lstrip(const us3::String& list) const
 {
     std::set<us3::Char> st;
-    for (auto i : list)
+    for (auto i : list.contents)
         st.insert(i);
     return this->lstrip(st);
 }
@@ -481,6 +521,14 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
     return result;
 }
 
+us3::String us3::String::reversed(void) const
+{
+    us3::String result;
+    for (int i = this->length(); i >= 0; i--)
+        result += this->contents[i];
+    return result;
+}
+
 us3::String us3::String::rjust(int len,
                                const us3::Char& chr = us3::Char(' ')) const
 {
@@ -497,10 +545,10 @@ us3::String us3::String::rstrip(const us3::Char& chr) const
     return this->rstrip(st);
 }
 
-us3::String us3::String::rstrip(const std::vector<us3::Char>& list) const
+us3::String us3::String::rstrip(const us3::String& list) const
 {
     std::set<us3::Char> st;
-    for (auto i : list)
+    for (auto i : list.contents)
         st.insert(i);
     return this->rstrip(st);
 }
@@ -554,10 +602,10 @@ us3::String us3::String::strip(const us3::Char& chr) const
     return this->strip(st);
 }
 
-us3::String us3::String::strip(const std::vector<us3::Char>& list) const
+us3::String us3::String::strip(const us3::String& list) const
 {
     std::set<us3::Char> st;
-    for (auto i : list)
+    for (auto i : list.contents)
         st.insert(i);
     return this->strip(st);
 }
