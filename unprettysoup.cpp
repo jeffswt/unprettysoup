@@ -923,13 +923,13 @@ us3::String us3::String::expandtabs(int tabsize = 4) const
     us3::String result;
     int wpos = 0;
     for (us3::Char chr : this->contents) {
-        if (chr == us3::Char('\r') || chr == us3::Char('\n')) {
-            wpos = 0;
-            result += chr;
-        } else if (chr == us3::Char('\t')) {
+        if (chr == us3::Char('\t')) {
             int dist = tabsize - wpos % tabsize;
             wpos += dist;
             result += us3::String(" ") * dist;
+        } else if (chr == us3::Char('\r') || chr == us3::Char('\n')) {  // OK
+            wpos = 0;
+            result += chr;
         } else {
             wpos += 1;
             result += chr;
