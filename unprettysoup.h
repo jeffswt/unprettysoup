@@ -47,8 +47,10 @@ namespace us3
         // Determination methods
         bool isalnum(void) const;
         bool isalpha(void) const;
+        bool isdecimal(void) const;
         bool isdigit(void) const;
         bool islower(void) const;
+        bool isnumeric(void) const;
         bool isspace(void) const;
         bool isupper(void) const;
         // Input and output
@@ -110,8 +112,10 @@ namespace us3
         int find_last_not_of(const std::set<Char>&, int) const;
         bool isalnum(void) const;
         bool isalpha(void) const;
+        bool isdecimal(void) const;
         bool isdigit(void) const;
         bool islower(void) const;
+        bool isnumeric(void) const;
         bool isspace(void) const;
         bool isupper(void) const;
         String join(const std::vector<String>&) const;
