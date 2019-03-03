@@ -147,6 +147,16 @@ namespace us3
     std::ostream& operator << (std::ostream&, const Char&);
     std::istream& operator >> (std::istream&, String&);
     std::ostream& operator << (std::ostream&, const String&);
+
+    class Tag
+    {
+    protected:
+    public:
+        // Initializers
+        Tag(void);
+    };
+    
+    Tag UnprettySoup(const String&);
 } // us3
 
 #endif

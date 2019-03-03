@@ -1268,6 +1268,17 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
     return stream;
 }
 
+us3::Tag::Tag(void)
+{
+    return ;
+}
+
+us3::Tag us3::UnprettySoup(const String& str)
+{
+    us3::Tag tag;
+    return tag;
+}
+
 int main()
 {
     using namespace std;
