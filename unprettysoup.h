@@ -44,6 +44,15 @@ namespace us3
         Char& operator += (const Char&);
         Char operator - (const Char&) const;
         Char& operator -= (const Char&);
+        // Determination methods
+        bool isalnum(void) const;
+        bool isalpha(void) const;
+        bool isdecimal(void) const;
+        bool isdigit(void) const;
+        bool islower(void) const;
+        bool isnumeric(void) const;
+        bool isspace(void) const;
+        bool isupper(void) const;
         // Input and output
         friend std::istream& operator >> (std::istream&, Char&);
         friend std::ostream& operator << (std::ostream&, const Char&);
@@ -101,14 +110,14 @@ namespace us3
         int find_last_not_of(const Char&, int) const;
         int find_last_not_of(const String&, int) const;
         int find_last_not_of(const std::set<Char>&, int) const;
-        // bool isalnum(void);
-        // bool isalpha(void);
-        // bool isdecimal(void);
-        // bool isdigit(void);
-        // bool islower(void);
-        // bool isnumeric(void);
-        // bool isspace(void);
-        // bool isupper(void);
+        bool isalnum(void) const;
+        bool isalpha(void) const;
+        bool isdecimal(void) const;
+        bool isdigit(void) const;
+        bool islower(void) const;
+        bool isnumeric(void) const;
+        bool isspace(void) const;
+        bool isupper(void) const;
         String join(const std::vector<String>&) const;
         String ljust(int, const Char&) const;
         String lower(void) const;

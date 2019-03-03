@@ -149,6 +149,54 @@ us3::Char& us3::Char::operator -= (const us3::Char& chr)
     return *this;
 }
 
+bool us3::Char::isalnum(void) const
+{
+    return this->isalpha() || this->isnumeric();
+}
+
+bool us3::Char::isalpha(void) const
+{
+    return this->islower() || this->isupper();
+}
+
+bool us3::Char::isdecimal(void) const
+{
+    return this->value >= '0' && this->value <= '9';
+}
+
+bool us3::Char::isdigit(void) const
+{
+    return this->isdecimal();
+}
+
+bool us3::Char::islower(void) const
+{
+    return this->value >= 'a' && this->value <= 'z';
+}
+
+bool us3::Char::isnumeric(void) const
+{
+    return this->isdecimal();
+}
+
+bool us3::Char::isspace(void) const
+{
+    // This method is Unicode safe.
+    #define eq(_x) (this->value == (_x))
+    return eq(0x0009) || eq(0x000a) || eq(0x000b) || eq(0x000c) ||
+           eq(0x000d) || eq(0x0020) || eq(0x0085) || eq(0x00a0) ||
+           eq(0x1680) || (this->value >= 0x2000 && this->value <= 0x200d) ||
+           eq(0x2028) || eq(0x2029) || eq(0x202f) || eq(0x205f) ||
+           eq(0x3000) || eq(0x180e) || eq(0x2060) || eq(0xfeff);
+    #undef eq
+}
+
+bool us3::Char::isupper(void) const
+{
+    return this->value >= 'A' && this->value <= 'Z';
+}
+
+
 std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
 {
     char _tmp;
@@ -591,6 +639,51 @@ us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
         left += 1;
     }
     return this->substr(left, right);
+}
+
+#define us3_String_isfunc(__name__)    \
+bool us3::String::__name__(void) const \
+{                                      \
+    if (this->length() == 0)           \
+        return false;                  \
+    for (auto chr : this->contents)    \
+        if (!chr.__name__())           \
+            return false;              \
+    return true;                       \
+}
+
+us3_String_isfunc(isalnum);
+
+us3_String_isfunc(isalpha);
+
+us3_String_isfunc(isdecimal);
+
+us3_String_isfunc(isdigit);
+
+bool us3::String::islower(void) const
+{
+    int lo_cnt = 0, up_cnt = 0;
+    for (auto chr : this->contents)
+        if (chr.islower())
+            lo_cnt += 1;
+        else if (chr.isupper())
+            up_cnt += 1;
+    return lo_cnt >= 1 && up_cnt == 0;
+}
+
+us3_String_isfunc(isnumeric);
+
+us3_String_isfunc(isspace);
+
+bool us3::String::isupper(void) const
+{
+    int lo_cnt = 0, up_cnt = 0;
+    for (auto chr : this->contents)
+        if (chr.islower())
+            lo_cnt += 1;
+        else if (chr.isupper())
+            up_cnt += 1;
+    return up_cnt >= 1 && lo_cnt == 0;
 }
 
 us3::String us3::String::join(const std::vector<us3::String>& list) const
