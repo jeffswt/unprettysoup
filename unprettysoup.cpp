@@ -151,37 +151,29 @@ us3::Char& us3::Char::operator -= (const us3::Char& chr)
 
 bool us3::Char::isalnum(void) const
 {
-    return this->isalpha() || this->isnumeric();
+    return this->isalpha() || this->isdigit();
 }
 
 bool us3::Char::isalpha(void) const
 {
+    // WARNING: THIS METHOD IS NOT UNICODE SAFE
     return this->islower() || this->isupper();
-}
-
-bool us3::Char::isdecimal(void) const
-{
-    return this->value >= '0' && this->value <= '9';
 }
 
 bool us3::Char::isdigit(void) const
 {
-    return this->isdecimal();
+    // WARNING: THIS METHOD IS NOT UNICODE SAFE
+    return this->value >= '0' && this->value <= '9';
 }
 
 bool us3::Char::islower(void) const
 {
+    // WARNING: THIS METHOD IS NOT UNICODE SAFE
     return this->value >= 'a' && this->value <= 'z';
-}
-
-bool us3::Char::isnumeric(void) const
-{
-    return this->isdecimal();
 }
 
 bool us3::Char::isspace(void) const
 {
-    // This method is Unicode safe.
     #define eq(_x) (this->value == (_x))
     return eq(0x0009) || eq(0x000a) || eq(0x000b) || eq(0x000c) ||
            eq(0x000d) || eq(0x0020) || eq(0x0085) || eq(0x00a0) ||
@@ -193,6 +185,7 @@ bool us3::Char::isspace(void) const
 
 bool us3::Char::isupper(void) const
 {
+    // WARNING: THIS METHOD IS NOT UNICODE SAFE
     return this->value >= 'A' && this->value <= 'Z';
 }
 
@@ -656,8 +649,6 @@ us3_String_isfunc(isalnum);
 
 us3_String_isfunc(isalpha);
 
-us3_String_isfunc(isdecimal);
-
 us3_String_isfunc(isdigit);
 
 bool us3::String::islower(void) const
@@ -671,8 +662,6 @@ bool us3::String::islower(void) const
     return lo_cnt >= 1 && up_cnt == 0;
 }
 
-us3_String_isfunc(isnumeric);
-
 us3_String_isfunc(isspace);
 
 bool us3::String::isupper(void) const
@@ -685,6 +674,8 @@ bool us3::String::isupper(void) const
             up_cnt += 1;
     return up_cnt >= 1 && lo_cnt == 0;
 }
+
+#undef us3_String_isfunc
 
 us3::String us3::String::join(const std::vector<us3::String>& list) const
 {
@@ -873,7 +864,6 @@ int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "abcd\tdef\nabcdef\tgh", b = "a";
-    cout << a.expandtabs() << endl;
+    cout << String("Ab1.").isalnum() << endl;
     return 0;
 }
