@@ -1268,21 +1268,29 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
     return stream;
 }
 
-us3::Tag::Tag(void)
+us3::Element::Element(void)
 {
     return ;
 }
 
-us3::Tag us3::UnprettySoup(const String& str)
+us3::Element us3::UnprettySoup(const String& str)
 {
-    us3::Tag tag;
-    return tag;
+    us3::Element elem;
+    return elem;
 }
 
 int main()
 {
     using namespace std;
     using namespace us3;
-    cout << String("Ab").isupper() << endl;
+    String a = "a";
+    cout << a << endl;
+    String *b = &a;
+    cout << *b << endl;
+    *b = "b";
+    cout << *b << endl;
+    cout << a << endl;
+    map<int, int> mp;
+    mp[0] = 1;
     return 0;
 }

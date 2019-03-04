@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 
 #define bin(_x) (int(((_x) / 10000000 % 2) * 128 + ((_x) / 1000000 % 2) *\
@@ -148,15 +149,46 @@ namespace us3
     std::istream& operator >> (std::istream&, String&);
     std::ostream& operator << (std::ostream&, const String&);
 
-    class Tag
+    enum ElementType
+    {
+        Doctype,  // <!DOCTYPE html>
+        Tag,  // <tag>...</tag>
+        NavigableString,  // ...
+        Comment,  // <!--...-->
+    };
+
+    class Element
     {
     protected:
+        // Data
+        ElementType p_type;  // Element type
+        String p_content;  // Contents [Doctype, NavigableString, Comment]
+        std::map<String, String> p_attrs;  // Element attributes [Tag]
+        // Relations
+        Element* p_parent;
+        std::vector<Element> p_descendants;
     public:
+        String name;  // Element name [Tag]
         // Initializers
-        Tag(void);
+        Element(void);
+        // Data access functions
+        // String& operator [] (const String&) const;
+        // bool attrs_has(const String&);
+        // String attrs_get(const String&) const;
+        // void attrs_set(const String&, const String&);
+        // Element query functions
+        // Element modification functions
+        // Friends
+        friend class ElementParser;
     };
-    
-    Tag UnprettySoup(const String&);
+
+    class ElementParser
+    {
+    protected:
+        friend Element UnprettySoup(const String&);
+    };  // You should not use this
+
+    Element UnprettySoup(const String&);
 } // us3
 
 #endif
