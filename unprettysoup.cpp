@@ -5,7 +5,14 @@
 class ChardetTable
 {
 public:
+    // Unicode character map
     char *table;
+    // Standard categories
+    us3::String s_alpha, s_decimal, s_digit, s_lower, s_numeric, s_space,
+                s_upper;
+    // HTML5 categories
+    us3::String s_attr_d;
+    // Initializer
     ChardetTable(void)
     {
         this->table = new char[0x110000];
@@ -403,6 +410,21 @@ public:
         #undef eq
         #undef rn
         #undef rnd
+        // Categorize these characters
+        #define op(__x, __y)  if (this->table[i] & (1 << (__x))) \
+            this->__y += us3::Char(i);
+        for (unsigned long long i = 0x00; i <= 0x10ffff; i++) {
+            op(0, s_alpha);
+            op(1, s_decimal);
+            op(2, s_digit);
+            op(3, s_lower);
+            op(4, s_numeric);
+            op(5, s_space);
+            op(6, s_upper);
+        }
+        #undef op
+        // Other definitions
+        this->s_attr_d = us3::String("\"\'<>/=") + this->s_space;
         return ;
     }
 } chardet_table;
@@ -1285,12 +1307,10 @@ int main()
     using namespace us3;
     String a = "a";
     cout << a << endl;
-    String *b = &a;
-    cout << *b << endl;
-    *b = "b";
-    cout << *b << endl;
+    String& b = a;
+    cout << b << endl;
+    b = "b";
+    cout << b << endl;
     cout << a << endl;
-    map<int, int> mp;
-    mp[0] = 1;
     return 0;
 }

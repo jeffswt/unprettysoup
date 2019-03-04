@@ -185,6 +185,18 @@ namespace us3
     class ElementParser
     {
     protected:
+        void get_string(const String&, int&, String&);
+        void get_element_main(const String&, int&, Element&);
+        void get_element_detect(const String&, int&, Element&, ElementType&);
+        void get_doctype(const String&, int&, Element&);
+        void get_tag_open(const String&, int&, Element&);
+        void get_tag_close(const String&, int&, Element&);
+        void get_tag_raw(const String&, int&, Element&);
+        void get_comment(const String&, int&, Element&);
+        void get_attr_main(const String&, int&, String&, String&);
+        void get_attr_lvalue(const String&, int&, String&);
+        void get_attr_rvalue(const String&, int&, String&);
+        Element parse(const String&);
         friend Element UnprettySoup(const String&);
     };  // You should not use this
 
