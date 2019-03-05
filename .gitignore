@@ -33,3 +33,4 @@
 
 # Dev environment
 .vscode
+*.html

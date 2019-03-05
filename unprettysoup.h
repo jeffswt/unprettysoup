@@ -9,19 +9,15 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
-
-#define bin(_x) (int(((_x) / 10000000 % 2) * 128 + ((_x) / 1000000 % 2) *\
-    64 + ((_x) / 100000 % 2) * 32 + ((_x) / 10000 % 2) * 16 +\
-    ((_x) / 1000 % 2) * 8 + ((_x) / 100 % 2) * 4 + ((_x) / 10 % 2) * 2 +\
-    ((_x) / 1 % 2) * 1))
 
 namespace us3
 {
     class Char
     {
     protected:
-        unsigned long long value;
+        unsigned int value;
     public:
         // Converters
         void from_string(std::string, int&);
@@ -29,7 +25,7 @@ namespace us3
         // Initializers
         Char(void);
         Char(char);
-        Char(unsigned long long);
+        Char(unsigned int);
         Char(std::string);
         Char(std::string, int&);
         // Comparison operators
@@ -121,17 +117,20 @@ namespace us3
         String join(const std::vector<String>&) const;
         String ljust(int, const Char&) const;
         String lower(void) const;  // No Unicode support
+        String lstrip(void) const;
         String lstrip(const Char&) const;
         String lstrip(const String&) const;
         String lstrip(const std::set<Char>&) const;
         String replace(const String&, const String&, int) const;
         String reversed(void) const;
         String rjust(int, const Char&) const;
+        String rstrip(void) const;
         String rstrip(const Char&) const;
         String rstrip(const String&) const;
         String rstrip(const std::set<Char>&) const;
         std::vector<String> split(const String&) const;
         bool startswith(const String&) const;
+        String strip(void) const;
         String strip(const Char&) const;
         String strip(const String&) const;
         String strip(const std::set<Char>&) const;
@@ -147,6 +146,60 @@ namespace us3
     std::ostream& operator << (std::ostream&, const Char&);
     std::istream& operator >> (std::istream&, String&);
     std::ostream& operator << (std::ostream&, const String&);
+
+    enum ElementType
+    {
+        Doctype,  // <!DOCTYPE html>
+        Tag,  // <tag>...</tag>
+        CorruptedTag,  // This is not to be parsed
+        NavigableString,  // ...
+        Comment,  // <!--...-->
+    };
+
+    class Element
+    {
+    protected:
+    public:
+        // Data
+        ElementType p_type;  // Element type
+        String p_content;  // Contents [Doctype, NavigableString, Comment]
+        std::map<String, String> p_attrs;  // Element attributes [Tag]
+        // Relations
+        Element* p_parent;
+        std::vector<Element*> p_descendants;
+    public:
+        String name;  // Element name [Tag]
+        // Initializers
+        Element(void);
+        // Data access functions
+        // String& operator [] (const String&) const;
+        // bool attrs_has(const String&);
+        // String attrs_get(const String&) const;
+        // void attrs_set(const String&, const String&);
+        // Element query functions
+        // Element modification functions
+        // Friends
+        friend class ElementParser;
+    };
+
+    class ElementParser
+    {
+    protected:
+        us3::String page, page_lower;
+        bool get_string(int&, String&);
+        bool get_element(int&, Element*&);
+        bool get_doctype(int&, Element*&);
+        bool get_tag(int&, Element*&);
+        bool get_tag_open(int&, Element*&, bool&);
+        bool get_tag_close(int&, Element*&);
+        bool get_tag_raw(int&, Element*&);  // W.I.P.
+        bool get_corrupted_tag(int&);
+        bool get_comment(int&, Element*&);
+        Element* parse(const String&);
+        friend Element* UnprettySoup(const String&);
+    };  // You should not use this
+
+    Element* UnprettySoup(const String&);
 } // us3
 
 #endif

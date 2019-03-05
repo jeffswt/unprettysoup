@@ -5,7 +5,15 @@
 class ChardetTable
 {
 public:
+    // Unicode character map
     char *table;
+    // Standard categories
+    us3::String s_alpha, s_decimal, s_digit, s_lower, s_numeric, s_space,
+                s_upper;
+    // HTML5 categories
+    us3::String sp_attr_d;
+    std::set<us3::String> sp_name_void;
+    // Initializer
     ChardetTable(void)
     {
         this->table = new char[0x110000];
@@ -403,6 +411,27 @@ public:
         #undef eq
         #undef rn
         #undef rnd
+        // Categorize these characters
+        #define op(__x, __y)  if (this->table[i] & (1 << (__x))) \
+            this->__y += us3::Char(i);
+        for (unsigned int i = 0x00; i <= 0x10ffff; i++) {
+            op(0, s_alpha);
+            op(1, s_decimal);
+            op(2, s_digit);
+            op(3, s_lower);
+            op(4, s_numeric);
+            op(5, s_space);
+            op(6, s_upper);
+        }
+        #undef op
+        // Other definitions
+        this->sp_attr_d = us3::String("\"\'<>/=") + this->s_space;
+        #define ins(_x) this->sp_name_void.insert(_x)
+        this->sp_name_void.clear();
+        ins("area"); ins("base"); ins("br"); ins("col"); ins("embed");
+        ins("hr"); ins("img"); ins("input"); ins("link"); ins("meta");
+        ins("param"); ins("source"); ins("track"); ins("wbr");
+        #undef ins
         return ;
     }
 } chardet_table;
@@ -451,7 +480,7 @@ void us3::Char::from_string(std::string bstr, int& pos)
 
 std::string us3::Char::to_string(void) const
 {
-    unsigned long long value = this->value;
+    unsigned int value = this->value;
     std::string output = "";
     if (value >= 0x0000 && value <= 0x007f) {
         output += char((value & 0x7f) ^ 0x00);
@@ -483,7 +512,7 @@ us3::Char::Char(char value)
     return ;
 }
 
-us3::Char::Char(unsigned long long value)
+us3::Char::Char(unsigned int value)
 {
     this->value = value;
     return ;
@@ -598,7 +627,7 @@ std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
 {
     char _tmp;
     int tmp;
-    unsigned long long result = 0;
+    unsigned int result = 0;
     int await = 0;
     stream >> _tmp;
     tmp = int(_tmp) & 0xff;
@@ -1012,6 +1041,11 @@ us3::String us3::String::lower(void) const
     return result;
 }
 
+us3::String us3::String::lstrip(void) const
+{
+    return this->lstrip(chardet_table.s_space);
+}
+
 us3::String us3::String::lstrip(const us3::Char& chr) const
 {
     std::set<us3::Char> st;
@@ -1133,6 +1167,11 @@ us3::String us3::String::rjust(int len,
     return us3::String(chr) * (len - alen) + *this;
 }
 
+us3::String us3::String::rstrip(void) const
+{
+    return this->rstrip(chardet_table.s_space);
+}
+
 us3::String us3::String::rstrip(const us3::Char& chr) const
 {
     std::set<us3::Char> st;
@@ -1184,6 +1223,11 @@ bool us3::String::startswith(const us3::String& str) const
 {
     int length = this->length(), slen = str.length();
     return slen <= length && this->substr(0, slen - 1) == str;
+}
+
+us3::String us3::String::strip(void) const
+{
+    return this->strip(chardet_table.s_space);
 }
 
 us3::String us3::String::strip(const us3::Char& chr) const
@@ -1268,10 +1312,390 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
     return stream;
 }
 
+us3::Element::Element(void)
+{
+    return ;
+}
+
+bool us3::ElementParser::get_string(
+        int& pos,
+        us3::String& result)
+{
+    int npos = page.find_first_of("<", pos);
+    if (npos == -1)
+        npos = page.length();  // Assume this outside the page
+    result = page.substr(pos, npos - 1);  // The previous character as end
+    pos = npos;
+    // We assume that there's always a string
+    return true;
+}
+
+bool us3::ElementParser::get_element(
+        int& pos,
+        us3::Element*& result)
+{
+    if (pos >= page.length())
+        return false;
+    // Detect element type
+    us3::ElementType typ = CorruptedTag;
+    if (page[pos] == '<') {
+        if (page[pos + 1] != '!')
+            typ = Tag;
+        if (page[pos + 2] == '-' && page[pos + 3] == '-')
+            typ = Comment;
+        if (page[pos + 1] == '/')
+            typ = CorruptedTag;
+    } else {
+        typ = NavigableString;
+    }
+    // Dispatch job
+    if (typ == Tag) {
+        return this->get_tag(pos, result);
+    } else if (typ == Comment) {
+        return this->get_comment(pos, result);
+    } else if (typ == CorruptedTag || typ == Doctype) {
+        return this->get_corrupted_tag(pos);
+    } else if (typ == NavigableString) {
+        us3::String nothing;
+        return this->get_string(pos, nothing);
+    }
+    return true;
+}
+
+bool us3::ElementParser::get_doctype(
+        int& pos,
+        us3::Element*& result)
+{
+    if (page.substr(pos, pos + 8).upper() != String("<!DOCTYPE")) {
+        // This is not a doctype element
+        result = nullptr;
+        return false;
+    }
+    int npos = page.find_first_of(">");
+    if (npos == -1) {  // Not terminated
+        pos = page.length();
+        result = nullptr;
+        return false;
+    }
+    result = new us3::Element();
+    result->p_type = Doctype;
+    result->p_content = page.substr(pos + 9, npos - 1).strip();
+    pos = npos + 1;
+    return true;
+}
+
+bool us3::ElementParser::get_tag(
+        int& pos,
+        us3::Element*& result)
+{
+    result = new us3::Element();
+    result->p_type = Tag;
+    // Open tag
+    bool self_closed = false;
+    if (!this->get_tag_open(pos, result, self_closed)) {
+        delete result;
+        result = nullptr;
+        return false;
+    }
+    if (self_closed)
+        return true;
+    // Detect raw content tag and process
+    if (result->name == "script" || result->name == "style") {
+        this->get_tag_raw(pos, result);
+        return true;
+    }
+    // Children
+    while (pos < page.length()) {
+        using namespace std;
+        us3::String str;
+        this->get_string(pos, str);
+        // Insert NavigableString element
+        us3::Element *s_elem = new us3::Element();
+        s_elem->p_type = NavigableString;
+        s_elem->p_content = str;
+        s_elem->p_parent = result;
+        result->p_descendants.push_back(s_elem);
+        // Encountered close tag
+        if (page[pos] == '<' && page[pos + 1] == '/')
+            break;
+        // New tag, recurse
+        us3::Element *n_elem;
+        if (this->get_element(pos, n_elem)) {
+            n_elem->p_parent = result;
+            result->p_descendants.push_back(n_elem);
+        }
+    }
+    // Close tag (if open tag is not self-closed)
+    this->get_tag_close(pos, result);
+    return true;  // Always successful
+}
+
+bool us3::ElementParser::get_tag_open(
+        int& pos,
+        us3::Element*& result,
+        bool& self_closed)
+{
+    int npos = page.find_first_of(">", pos);
+    if (npos == -1) {
+        pos = page.length();
+        return false;
+    }
+    us3::String tag_c = page.substr(pos + 1, npos - 1);
+    npos += 1;
+    pos = npos;
+    // Determine self-closed elements
+    if (tag_c[tag_c.length() - 1] == '/') {
+        self_closed = true;
+        tag_c = tag_c.substr(0, tag_c.length() - 2);
+    }
+    tag_c += ' ';  // This trick is to prevent encountering string end
+    // Parse tag name
+    int c_pos = tag_c.find_first_of(chardet_table.s_space, 0);
+    if (c_pos == 0)
+        return false;
+    else if (c_pos == -1)
+        c_pos = tag_c.length();
+    result->name = tag_c.substr(0, c_pos - 1).lower();
+    if (chardet_table.sp_name_void.find(result->name) != chardet_table.
+            sp_name_void.end())
+        self_closed = true;  // Void element always self-closes
+    // Parse attributes
+    while (c_pos < tag_c.length()) {
+        c_pos = tag_c.find_first_not_of(chardet_table.s_space, c_pos);
+        if (c_pos == -1)
+            break;
+        // Parse attribute name
+        bool has_value = true;
+        int eq_pos = tag_c.find_first_of(chardet_table.s_space + "=", c_pos);
+        if (eq_pos == -1) {
+            // eq_pos = tag_c.length() - 1;
+            c_pos = tag_c.length();
+            has_value = false;
+        }
+        if (eq_pos == c_pos) {
+            // No attribute name, skip attr
+            c_pos = tag_c.find_first_of(chardet_table.s_space, c_pos);
+            continue;
+        }
+        us3::String attr_name = tag_c.substr(c_pos, eq_pos - 1).strip(),
+                    attr_value = "";
+        c_pos = eq_pos;
+        // Equal sign
+        if (has_value) {
+            // Eliminate spaces
+            c_pos = tag_c.find_first_not_of(chardet_table.s_space, c_pos);
+            if (c_pos == -1) {
+                c_pos = tag_c.length();
+                has_value = false;
+            } else if (tag_c[c_pos] != '=') {
+                c_pos = c_pos;
+                has_value = false;
+            } else {
+                c_pos = c_pos + 1;
+            }
+        }
+        // Eliminate spaces
+        if (has_value) {
+            c_pos = tag_c.find_first_not_of(chardet_table.s_space, c_pos);
+            if (c_pos == -1) {
+                c_pos = tag_c.length();
+                has_value = false;
+            }
+        }
+        // Parse attribute value
+        if (has_value) {
+            if (tag_c[c_pos] == '\"' || tag_c[c_pos] == '\'') {
+                int term_pos = tag_c.find_first_of(tag_c[c_pos], c_pos + 1);
+                if (term_pos == -1)
+                    term_pos = tag_c.length();
+                attr_value = tag_c.substr(c_pos + 1, term_pos - 1);
+                c_pos = term_pos + 1;
+            } else {
+                int term_pos = tag_c.find_first_of(chardet_table.sp_attr_d,
+                                                   c_pos);
+                if (term_pos == -1)
+                    term_pos = tag_c.length() - 1;
+                attr_value = tag_c.substr(c_pos, term_pos - 1).strip();
+                c_pos = term_pos;
+            }
+        }
+        // Inject attribute
+        result->p_attrs[attr_name] = attr_value;
+    }
+    // TODO
+    return true;
+}
+
+bool us3::ElementParser::get_tag_close(
+        int& pos,
+        us3::Element*& result)
+{
+    pos = page.find_first_of(">", pos) + 1;
+    if (pos == -1 + 1) {
+        pos = page.length();
+        return false;
+    }
+    return true;
+}
+
+bool us3::ElementParser::get_tag_raw(
+        int& pos,
+        us3::Element*& result)
+{
+    // HTML 5.3: 8.1.2.2. End tags
+    // 4. After the tag name, there may be one or more space characters.
+    // 5. Finally, end tags must be closed by a U+003E GREATER-THAN SIGN
+    //    character (>).
+    us3::String match_str = us3::String("</") + result->name;
+    // Therefore we do not match the closing bracket, for now.
+    int npos = pos - 1;  // Magic -1 for following +1
+    while (npos < page.length()) {
+        npos = page_lower.find(match_str, npos + 1);
+        if (npos == -1) {  // No terminating tag
+            npos = page.length();
+            break;
+        }
+        // Validate this tag
+        int vpos = npos + match_str.length();
+        vpos = page.find_first_not_of(chardet_table.s_space, vpos);
+        if (vpos == -1) {
+            npos = page.length();
+            break;
+        } else if (page[vpos] != '>') {
+            npos = vpos;
+            continue;
+        }
+        // This is a correct tag
+        break;
+    }
+    // Create new NavigableString element to insert into
+    us3::Element *cont = new us3::Element();
+    cont->p_type = NavigableString;
+    cont->p_content = page.substr(pos, npos - 1);
+    cont->p_parent = result;
+    result->p_descendants.push_back(cont);
+    // Update position
+    if (npos < page.length()) {
+        pos = page.find_first_of(">", npos);
+        if (pos == -1)
+            pos = page.length();
+    } else {
+        pos = npos;
+    }
+    return true;
+}
+
+bool us3::ElementParser::get_corrupted_tag(
+        int& pos)
+{
+    pos = page.find_first_of(">", pos) + 1;
+    if (pos == -1 + 1)
+        pos = page.length();
+    return true;
+}
+
+bool us3::ElementParser::get_comment(
+        int& pos,
+        us3::Element*& result)
+{
+    pos = page.find_first_not_of("-", pos + 4);
+    int npos = page.find("-->", pos);
+    result = new us3::Element();
+    result->p_type = Comment;
+    if (npos == -1) {
+        result->p_content = page.substr(pos, page.length() - 1).strip();
+        pos = page.length();
+        return true;
+    }
+    int npos2 = page.find_last_not_of("-", npos);
+    result->p_content = page.substr(pos, npos2).strip();
+    pos = npos + 3;
+    return true;
+}
+
+us3::Element* us3::ElementParser::parse(const us3::String& content)
+{
+    this->page = content;
+    this->page_lower = content.lower();
+    us3::Element *dom = new us3::Element();
+    us3::String buffer;
+    int pos = 0;
+    dom->p_type = Tag;
+    dom->name = "[document]";
+    // Parse Doctype first, if there is any
+    us3::Element *doctype;
+    this->get_string(pos, buffer);
+    if (this->get_doctype(pos, doctype)) {
+        doctype->p_parent = dom;
+        dom->p_descendants.push_back(doctype);
+    }
+    // Parse html tag
+    us3::Element *ehtml;
+    this->get_string(pos, buffer);
+    if (this->get_element(pos, ehtml)) {
+        ehtml->p_parent = dom;
+        dom->p_descendants.push_back(ehtml);
+    }
+    // Finalize HTML parse
+    this->get_string(pos, buffer);
+    dom->p_parent = nullptr;
+    return dom;
+}
+
+us3::Element* us3::UnprettySoup(const us3::String& str)
+{
+    us3::ElementParser parser;
+    return parser.parse(str);
+}
+
+#include <fstream>
+
+using namespace std;
+using namespace us3;
+
+void pstring(String s)
+{
+    s = s.replace("\n", "");
+    int i = 0;
+    while (i < s.length()) {
+        cout << "    " << s.substr(i, i + 79) << "\n";
+        i += 80;
+    }
+    return ;
+}
+
+void dfs(Element* e)
+{
+    if (e->p_type == Tag) {
+        cout << "<class us3.Tag '" << e->name << "'>\n";
+    } else if (e->p_type == Doctype) {
+        cout << "<class us3.Doctype>\n";
+        pstring(e->p_content);
+    } else if (e->p_type == NavigableString) {
+        cout << "<class us3.NavigableString'>:\n";
+        pstring(e->p_content);
+    } else if (e->p_type == Comment) {
+        cout << "<class us3.Comment>\n";
+        pstring(e->p_content);
+    }
+    for (auto p : e->p_attrs) {
+        cout << "    " << p.first << " = " << p.second << "\n";
+    }
+    for (auto q : e->p_descendants)
+        dfs(q);
+    if (e->p_type == Tag)
+        cout << "<end of us3.Tag '" << e->name << "'>\n";
+    return ;
+}
+
 int main()
 {
-    using namespace std;
-    using namespace us3;
-    cout << String("Ab").isupper() << endl;
+    ifstream fin("sample.html");
+    string str = "", tmp;
+    while (getline(fin, tmp))
+        str += tmp + "\n";
+    String s = str;
+    auto elem = UnprettySoup(s);
+    dfs(elem);
     return 0;
 }
