@@ -1397,6 +1397,8 @@ bool us3::ElementParser::get_tag(
         result = nullptr;
         return false;
     }
+    if (self_closed)
+        return true;
     // Detect raw content tag and process
     if (result->name == "script" || result->name == "style") {
         this->get_tag_raw(pos, result);
@@ -1424,11 +1426,8 @@ bool us3::ElementParser::get_tag(
         }
     }
     // Close tag (if open tag is not self-closed)
-    if (!self_closed) {
-        this->get_tag_close(pos, result);
-        return true;  // Always successful
-    }
-    return true;
+    this->get_tag_close(pos, result);
+    return true;  // Always successful
 }
 
 bool us3::ElementParser::get_tag_open(
@@ -1654,16 +1653,30 @@ us3::Element* us3::UnprettySoup(const us3::String& str)
 using namespace std;
 using namespace us3;
 
+void pstring(String s)
+{
+    s = s.replace("\n", "");
+    int i = 0;
+    while (i < s.length()) {
+        cout << "    " << s.substr(i, i + 79) << "\n";
+        i += 80;
+    }
+    return ;
+}
+
 void dfs(Element* e)
 {
     if (e->p_type == Tag) {
         cout << "<class us3.Tag '" << e->name << "'>\n";
     } else if (e->p_type == Doctype) {
         cout << "<class us3.Doctype>\n";
+        pstring(e->p_content);
     } else if (e->p_type == NavigableString) {
-        cout << "<class us3.NavigableString'>\n";
+        cout << "<class us3.NavigableString'>:\n";
+        pstring(e->p_content);
     } else if (e->p_type == Comment) {
         cout << "<class us3.Comment>\n";
+        pstring(e->p_content);
     }
     for (auto p : e->p_attrs) {
         cout << "    " << p.first << " = " << p.second << "\n";
