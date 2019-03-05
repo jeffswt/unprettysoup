@@ -159,6 +159,7 @@ namespace us3
     class Element
     {
     protected:
+    public:
         // Data
         ElementType p_type;  // Element type
         String p_content;  // Contents [Doctype, NavigableString, Comment]
@@ -188,7 +189,7 @@ namespace us3
         bool get_element(const String&, int&, Element*&);
         bool get_doctype(const String&, int&, Element*&);
         bool get_tag(const String&, int&, Element*&);
-        bool get_tag_open(const String&, int&, Element*&);  // Partial
+        bool get_tag_open(const String&, int&, Element*&, bool&);  // Partial
         bool get_tag_close(const String&, int&, Element*&);
         bool get_tag_raw(const String&, int&, Element*&);  // W.I.P.
         bool get_corrupted_tag(const String&, int&);
