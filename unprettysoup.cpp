@@ -1648,6 +1648,14 @@ us3::Element* us3::UnprettySoup(const us3::String& str)
     return parser.parse(str);
 }
 
+us3::Element* us3::UnprettySoup(std::istream& fin)
+{
+    std::string content = "", tmp;
+    while (std::getline(fin, tmp))
+        content += tmp + "\n";
+    return us3::UnprettySoup(us3::String(content));
+}
+
 #include <fstream>
 
 using namespace std;
@@ -1691,11 +1699,7 @@ void dfs(Element* e)
 int main()
 {
     ifstream fin("sample.html");
-    string str = "", tmp;
-    while (getline(fin, tmp))
-        str += tmp + "\n";
-    String s = str;
-    auto elem = UnprettySoup(s);
+    auto elem = UnprettySoup(fin);
     dfs(elem);
     return 0;
 }

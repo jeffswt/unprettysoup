@@ -200,6 +200,7 @@ namespace us3
     };  // You should not use this
 
     Element* UnprettySoup(const String&);
+    Element* UnprettySoup(std::istream&);
 } // us3
 
 #endif
