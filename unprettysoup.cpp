@@ -1329,13 +1329,14 @@ bool us3::ElementParser::get_element(
         int& pos,
         us3::Element*& result)
 {
-    // TODO: detect if pos > page.length()
-    us3::ElementType typ = CorruptedTag;
+    if (pos >= page.length())
+        return false;
     // Detect element type
+    us3::ElementType typ = CorruptedTag;
     if (page[pos] == '<') {
         if (page[pos + 1] != '!')
             typ = Tag;
-        if (page[pos + 2] == '-')
+        if (page[pos + 2] == '-' && page[pos + 3] == '-')
             typ = Comment;
         if (page[pos + 1] == '/')
             typ = CorruptedTag;
@@ -1343,13 +1344,17 @@ bool us3::ElementParser::get_element(
         typ = NavigableString;
     }
     // Dispatch job
-    if (typ == Tag)
+    if (typ == Tag) {
         return this->get_tag(page, pos, result);
-    // else if (typ == Comment)
-    //     return this->get_comment(page, pos, result);
-    else if (typ == CorruptedTag)
+    } else if (typ == Comment) {
+        return this->get_comment(page, pos, result);
+    } else if (typ == CorruptedTag || typ == Doctype) {
         return this->get_corrupted_tag(page, pos);
-    return false;
+    } else if (typ == NavigableString) {
+        us3::String nothing;
+        return this->get_string(page, pos, nothing);
+    }
+    return true;
 }
 
 bool us3::ElementParser::get_doctype(
@@ -1388,7 +1393,7 @@ bool us3::ElementParser::get_tag(
         return false;
     }
     // Children
-    while (true) {
+    while (pos < page.length()) {
         using namespace std;
         us3::String str;
         this->get_string(page, pos, str);
@@ -1410,9 +1415,8 @@ bool us3::ElementParser::get_tag(
     }
     // Close tag
     if (!this->get_tag_close(page, pos, result)) {
-        delete result;
-        result = nullptr;
-        return false;
+        // In fact we should close the tags somehow, even though not closed.
+        return true;
     }
     return true;
 }
@@ -1425,12 +1429,14 @@ bool us3::ElementParser::get_tag_open(
     int npos = page.find_first_of(">", pos);
     if (npos == -1) {
         pos = page.length();
+        result = nullptr;
         return false;
     }
     us3::String tag_c = page.substr(pos + 1, npos - 1);
     npos += 1;
     pos = npos;
     std::cout << "Found tag: <" << tag_c << ">\n";
+    // TODO
     return true;
 }
 
@@ -1444,7 +1450,6 @@ bool us3::ElementParser::get_tag_close(
         pos = page.length();
         return false;
     }
-    std::cout << "Closed.\n";
     return true;
 }
 
@@ -1455,6 +1460,26 @@ bool us3::ElementParser::get_corrupted_tag(
     pos = page.find_first_of(">", pos) + 1;
     if (pos == -1 + 1)
         pos = page.length();
+    return true;
+}
+
+bool us3::ElementParser::get_comment(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
+{
+    pos = page.find_first_not_of("-", pos + 4);
+    int npos = page.find("-->", pos);
+    result = new us3::Element();
+    result->p_type = Comment;
+    if (npos == -1) {
+        result->p_content = page.substr(pos, page.length() - 1).strip();
+        pos = page.length();
+        return true;
+    }
+    int npos2 = page.find_last_not_of("-", npos);
+    result->p_content = page.substr(pos, npos2).strip();
+    pos = npos + 3;
     return true;
 }
 

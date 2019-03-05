@@ -12,11 +12,6 @@
 #include <map>
 
 
-#define bin(_x) (int(((_x) / 10000000 % 2) * 128 + ((_x) / 1000000 % 2) *\
-    64 + ((_x) / 100000 % 2) * 32 + ((_x) / 10000 % 2) * 16 +\
-    ((_x) / 1000 % 2) * 8 + ((_x) / 100 % 2) * 4 + ((_x) / 10 % 2) * 2 +\
-    ((_x) / 1 % 2) * 1))
-
 namespace us3
 {
     class Char
@@ -193,11 +188,11 @@ namespace us3
         bool get_element(const String&, int&, Element*&);
         bool get_doctype(const String&, int&, Element*&);
         bool get_tag(const String&, int&, Element*&);
-        bool get_tag_open(const String&, int&, Element*&);
+        bool get_tag_open(const String&, int&, Element*&);  // Partial
         bool get_tag_close(const String&, int&, Element*&);
         bool get_tag_raw(const String&, int&, Element*&);  // W.I.P.
         bool get_corrupted_tag(const String&, int&);
-        bool get_comment(const String&, int&, Element*&);  // W.I.P.
+        bool get_comment(const String&, int&, Element*&);
         bool get_attr(String&, Element*&);  // W.I.P.
         bool get_attr_lvalue(const String&, int&, String&);  // W.I.P.
         bool get_attr_rvalue(const String&, int&, String&);  // W.I.P.
