@@ -122,17 +122,20 @@ namespace us3
         String join(const std::vector<String>&) const;
         String ljust(int, const Char&) const;
         String lower(void) const;  // No Unicode support
+        String lstrip(void) const;
         String lstrip(const Char&) const;
         String lstrip(const String&) const;
         String lstrip(const std::set<Char>&) const;
         String replace(const String&, const String&, int) const;
         String reversed(void) const;
         String rjust(int, const Char&) const;
+        String rstrip(void) const;
         String rstrip(const Char&) const;
         String rstrip(const String&) const;
         String rstrip(const std::set<Char>&) const;
         std::vector<String> split(const String&) const;
         bool startswith(const String&) const;
+        String strip(void) const;
         String strip(const Char&) const;
         String strip(const String&) const;
         String strip(const std::set<Char>&) const;

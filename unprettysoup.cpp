@@ -1034,6 +1034,11 @@ us3::String us3::String::lower(void) const
     return result;
 }
 
+us3::String us3::String::lstrip(void) const
+{
+    return this->lstrip(chardet_table.s_space);
+}
+
 us3::String us3::String::lstrip(const us3::Char& chr) const
 {
     std::set<us3::Char> st;
@@ -1155,6 +1160,11 @@ us3::String us3::String::rjust(int len,
     return us3::String(chr) * (len - alen) + *this;
 }
 
+us3::String us3::String::rstrip(void) const
+{
+    return this->rstrip(chardet_table.s_space);
+}
+
 us3::String us3::String::rstrip(const us3::Char& chr) const
 {
     std::set<us3::Char> st;
@@ -1206,6 +1216,11 @@ bool us3::String::startswith(const us3::String& str) const
 {
     int length = this->length(), slen = str.length();
     return slen <= length && this->substr(0, slen - 1) == str;
+}
+
+us3::String us3::String::strip(void) const
+{
+    return this->strip(chardet_table.s_space);
 }
 
 us3::String us3::String::strip(const us3::Char& chr) const
@@ -1295,6 +1310,39 @@ us3::Element::Element(void)
     return ;
 }
 
+bool us3::ElementParser::get_string(const us3::String& page, int& pos,
+                                    us3::String& result)
+{
+    int npos = page.find_first_of("<", pos);
+    if (npos == -1)
+        npos = page.length();  // Assume this outside the page
+    result = page.substr(pos, npos - 1);  // The previous character as end
+    pos = npos;
+    // We assume that there's always a string
+    return true;
+}
+
+bool us3::ElementParser::get_doctype(const us3::String& page, int& pos,
+                                     us3::Element*& result)
+{
+    if (page.substr(pos, pos + 8).upper() != String("<!DOCTYPE")) {
+        // This is not a doctype element
+        result = nullptr;
+        return false;
+    }
+    int npos = page.find_first_of(">");
+    if (npos == -1) {  // Not terminated
+        pos = page.length();
+        result = nullptr;
+        return false;
+    }
+    result = new us3::Element();
+    result->p_type = Doctype;
+    result->p_content = page.substr(pos + 9, npos - 1).strip();
+    pos = npos + 1;
+    return true;
+}
+
 us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
     us3::Element *dom = new us3::Element();
@@ -1307,16 +1355,18 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     this->get_string(content, pos, buffer);
     if (this->get_doctype(content, pos, doctype)) {
         doctype->p_parent = dom;
+        std::cout << doctype->p_content << "*doctype\n";
         dom->p_descendants.push_back(doctype);
     }
     // Parse html tag
     us3::Element *ehtml;
     this->get_string(content, pos, buffer);
-    if (this->get_element_main(content, pos, ehtml)) {
-        ehtml->p_parent = dom;
-        dom->p_descendants.push_back(ehtml);
-    }
+    // if (this->get_element_main(content, pos, ehtml)) {
+    //     ehtml->p_parent = dom;
+    //     dom->p_descendants.push_back(ehtml);
+    // }
     // Finalize HTML parse
+    this->get_string(content, pos, buffer);
     dom->p_parent = nullptr;
     return dom;
 }
@@ -1338,6 +1388,6 @@ int main()
     while (getline(fin, tmp))
         str += tmp + "\n";
     String s = str;
-    cout << s << endl;
+    auto elem = UnprettySoup(s);
     return 0;
 }
