@@ -413,7 +413,7 @@ public:
         // Categorize these characters
         #define op(__x, __y)  if (this->table[i] & (1 << (__x))) \
             this->__y += us3::Char(i);
-        for (unsigned long long i = 0x00; i <= 0x10ffff; i++) {
+        for (unsigned int i = 0x00; i <= 0x10ffff; i++) {
             op(0, s_alpha);
             op(1, s_decimal);
             op(2, s_digit);
@@ -473,7 +473,7 @@ void us3::Char::from_string(std::string bstr, int& pos)
 
 std::string us3::Char::to_string(void) const
 {
-    unsigned long long value = this->value;
+    unsigned int value = this->value;
     std::string output = "";
     if (value >= 0x0000 && value <= 0x007f) {
         output += char((value & 0x7f) ^ 0x00);
@@ -505,7 +505,7 @@ us3::Char::Char(char value)
     return ;
 }
 
-us3::Char::Char(unsigned long long value)
+us3::Char::Char(unsigned int value)
 {
     this->value = value;
     return ;
@@ -620,7 +620,7 @@ std::istream& us3::operator >> (std::istream& stream, us3::Char& chr)
 {
     char _tmp;
     int tmp;
-    unsigned long long result = 0;
+    unsigned int result = 0;
     int await = 0;
     stream >> _tmp;
     tmp = int(_tmp) & 0xff;
@@ -1310,8 +1310,10 @@ us3::Element::Element(void)
     return ;
 }
 
-bool us3::ElementParser::get_string(const us3::String& page, int& pos,
-                                    us3::String& result)
+bool us3::ElementParser::get_string(
+        const us3::String& page,
+        int& pos,
+        us3::String& result)
 {
     int npos = page.find_first_of("<", pos);
     if (npos == -1)
@@ -1322,8 +1324,38 @@ bool us3::ElementParser::get_string(const us3::String& page, int& pos,
     return true;
 }
 
-bool us3::ElementParser::get_doctype(const us3::String& page, int& pos,
-                                     us3::Element*& result)
+bool us3::ElementParser::get_element(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
+{
+    // TODO: detect if pos > page.length()
+    us3::ElementType typ = CorruptedTag;
+    // Detect element type
+    if (page[pos] == '<') {
+        if (page[pos + 1] != '!')
+            typ = Tag;
+        if (page[pos + 2] == '-')
+            typ = Comment;
+        if (page[pos + 1] == '/')
+            typ = CorruptedTag;
+    } else {
+        typ = NavigableString;
+    }
+    // Dispatch job
+    if (typ == Tag)
+        return this->get_tag(page, pos, result);
+    // else if (typ == Comment)
+    //     return this->get_comment(page, pos, result);
+    else if (typ == CorruptedTag)
+        return this->get_corrupted_tag(page, pos);
+    return false;
+}
+
+bool us3::ElementParser::get_doctype(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
 {
     if (page.substr(pos, pos + 8).upper() != String("<!DOCTYPE")) {
         // This is not a doctype element
@@ -1343,6 +1375,89 @@ bool us3::ElementParser::get_doctype(const us3::String& page, int& pos,
     return true;
 }
 
+bool us3::ElementParser::get_tag(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
+{
+    result = new us3::Element();
+    // Open tag
+    if (!this->get_tag_open(page, pos, result)) {
+        delete result;
+        result = nullptr;
+        return false;
+    }
+    // Children
+    while (true) {
+        using namespace std;
+        us3::String str;
+        this->get_string(page, pos, str);
+        // Insert NavigableString element
+        us3::Element *s_elem = new us3::Element();
+        s_elem->p_type = NavigableString;
+        s_elem->p_content = str;
+        s_elem->p_parent = result;
+        result->p_descendants.push_back(s_elem);
+        // Encountered close tag
+        if (page[pos] == '<' && page[pos + 1] == '/')
+            break;
+        // New tag, recurse
+        us3::Element *n_elem;
+        if (this->get_element(page, pos, n_elem)) {
+            n_elem->p_parent = result;
+            result->p_descendants.push_back(n_elem);
+        }
+    }
+    // Close tag
+    if (!this->get_tag_close(page, pos, result)) {
+        delete result;
+        result = nullptr;
+        return false;
+    }
+    return true;
+}
+
+bool us3::ElementParser::get_tag_open(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
+{
+    int npos = page.find_first_of(">", pos);
+    if (npos == -1) {
+        pos = page.length();
+        return false;
+    }
+    us3::String tag_c = page.substr(pos + 1, npos - 1);
+    npos += 1;
+    pos = npos;
+    std::cout << "Found tag: <" << tag_c << ">\n";
+    return true;
+}
+
+bool us3::ElementParser::get_tag_close(
+        const us3::String& page,
+        int& pos,
+        us3::Element*& result)
+{
+    pos = page.find_first_of(">", pos) + 1;
+    if (pos == -1 + 1) {
+        pos = page.length();
+        return false;
+    }
+    std::cout << "Closed.\n";
+    return true;
+}
+
+bool us3::ElementParser::get_corrupted_tag(
+        const us3::String& page,
+        int& pos)
+{
+    pos = page.find_first_of(">", pos) + 1;
+    if (pos == -1 + 1)
+        pos = page.length();
+    return true;
+}
+
 us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
     us3::Element *dom = new us3::Element();
@@ -1355,16 +1470,15 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     this->get_string(content, pos, buffer);
     if (this->get_doctype(content, pos, doctype)) {
         doctype->p_parent = dom;
-        std::cout << doctype->p_content << "*doctype\n";
         dom->p_descendants.push_back(doctype);
     }
     // Parse html tag
     us3::Element *ehtml;
     this->get_string(content, pos, buffer);
-    // if (this->get_element_main(content, pos, ehtml)) {
-    //     ehtml->p_parent = dom;
-    //     dom->p_descendants.push_back(ehtml);
-    // }
+    if (this->get_element(content, pos, ehtml)) {
+        ehtml->p_parent = dom;
+        dom->p_descendants.push_back(ehtml);
+    }
     // Finalize HTML parse
     this->get_string(content, pos, buffer);
     dom->p_parent = nullptr;

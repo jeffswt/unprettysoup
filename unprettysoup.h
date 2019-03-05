@@ -22,7 +22,7 @@ namespace us3
     class Char
     {
     protected:
-        unsigned long long value;
+        unsigned int value;
     public:
         // Converters
         void from_string(std::string, int&);
@@ -30,7 +30,7 @@ namespace us3
         // Initializers
         Char(void);
         Char(char);
-        Char(unsigned long long);
+        Char(unsigned int);
         Char(std::string);
         Char(std::string, int&);
         // Comparison operators
@@ -156,6 +156,7 @@ namespace us3
     {
         Doctype,  // <!DOCTYPE html>
         Tag,  // <tag>...</tag>
+        CorruptedTag,  // This is not to be parsed
         NavigableString,  // ...
         Comment,  // <!--...-->
     };
@@ -188,15 +189,16 @@ namespace us3
     class ElementParser
     {
     protected:
-        bool get_string(const String&, int&, String&);  // W.I.P.
-        bool get_element_main(const String&, int&, Element*&);  // W.I.P.
-        bool get_element_detect(const String&, int&, Element*&, ElementType&);  // W.I.P.
-        bool get_doctype(const String&, int&, Element*&);  // W.I.P.
-        bool get_tag_open(const String&, int&, Element*&);  // W.I.P.
-        bool get_tag_close(const String&, int&, Element*&);  // W.I.P.
+        bool get_string(const String&, int&, String&);
+        bool get_element(const String&, int&, Element*&);
+        bool get_doctype(const String&, int&, Element*&);
+        bool get_tag(const String&, int&, Element*&);
+        bool get_tag_open(const String&, int&, Element*&);
+        bool get_tag_close(const String&, int&, Element*&);
         bool get_tag_raw(const String&, int&, Element*&);  // W.I.P.
+        bool get_corrupted_tag(const String&, int&);
         bool get_comment(const String&, int&, Element*&);  // W.I.P.
-        bool get_attr_main(const String&, int&, String&, String&);  // W.I.P.
+        bool get_attr(String&, Element*&);  // W.I.P.
         bool get_attr_lvalue(const String&, int&, String&);  // W.I.P.
         bool get_attr_rvalue(const String&, int&, String&);  // W.I.P.
         Element* parse(const String&);
