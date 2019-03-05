@@ -185,18 +185,16 @@ namespace us3
     class ElementParser
     {
     protected:
-        bool get_string(const String&, int&, String&);
-        bool get_element(const String&, int&, Element*&);
-        bool get_doctype(const String&, int&, Element*&);
-        bool get_tag(const String&, int&, Element*&);
-        bool get_tag_open(const String&, int&, Element*&, bool&);  // Partial
-        bool get_tag_close(const String&, int&, Element*&);
-        bool get_tag_raw(const String&, int&, Element*&);  // W.I.P.
-        bool get_corrupted_tag(const String&, int&);
-        bool get_comment(const String&, int&, Element*&);
-        bool get_attr(String&, Element*&);  // W.I.P.
-        bool get_attr_lvalue(const String&, int&, String&);  // W.I.P.
-        bool get_attr_rvalue(const String&, int&, String&);  // W.I.P.
+        us3::String page, page_lower;
+        bool get_string(int&, String&);
+        bool get_element(int&, Element*&);
+        bool get_doctype(int&, Element*&);
+        bool get_tag(int&, Element*&);
+        bool get_tag_open(int&, Element*&, bool&);
+        bool get_tag_close(int&, Element*&);
+        bool get_tag_raw(int&, Element*&);  // W.I.P.
+        bool get_corrupted_tag(int&);
+        bool get_comment(int&, Element*&);
         Element* parse(const String&);
         friend Element* UnprettySoup(const String&);
     };  // You should not use this

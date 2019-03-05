@@ -1318,7 +1318,6 @@ us3::Element::Element(void)
 }
 
 bool us3::ElementParser::get_string(
-        const us3::String& page,
         int& pos,
         us3::String& result)
 {
@@ -1332,7 +1331,6 @@ bool us3::ElementParser::get_string(
 }
 
 bool us3::ElementParser::get_element(
-        const us3::String& page,
         int& pos,
         us3::Element*& result)
 {
@@ -1352,20 +1350,19 @@ bool us3::ElementParser::get_element(
     }
     // Dispatch job
     if (typ == Tag) {
-        return this->get_tag(page, pos, result);
+        return this->get_tag(pos, result);
     } else if (typ == Comment) {
-        return this->get_comment(page, pos, result);
+        return this->get_comment(pos, result);
     } else if (typ == CorruptedTag || typ == Doctype) {
-        return this->get_corrupted_tag(page, pos);
+        return this->get_corrupted_tag(pos);
     } else if (typ == NavigableString) {
         us3::String nothing;
-        return this->get_string(page, pos, nothing);
+        return this->get_string(pos, nothing);
     }
     return true;
 }
 
 bool us3::ElementParser::get_doctype(
-        const us3::String& page,
         int& pos,
         us3::Element*& result)
 {
@@ -1388,7 +1385,6 @@ bool us3::ElementParser::get_doctype(
 }
 
 bool us3::ElementParser::get_tag(
-        const us3::String& page,
         int& pos,
         us3::Element*& result)
 {
@@ -1396,16 +1392,21 @@ bool us3::ElementParser::get_tag(
     result->p_type = Tag;
     // Open tag
     bool self_closed = false;
-    if (!this->get_tag_open(page, pos, result, self_closed)) {
+    if (!this->get_tag_open(pos, result, self_closed)) {
         delete result;
         result = nullptr;
         return false;
+    }
+    // Detect raw content tag and process
+    if (result->name == "script" || result->name == "style") {
+        this->get_tag_raw(pos, result);
+        return true;
     }
     // Children
     while (pos < page.length()) {
         using namespace std;
         us3::String str;
-        this->get_string(page, pos, str);
+        this->get_string(pos, str);
         // Insert NavigableString element
         us3::Element *s_elem = new us3::Element();
         s_elem->p_type = NavigableString;
@@ -1417,21 +1418,20 @@ bool us3::ElementParser::get_tag(
             break;
         // New tag, recurse
         us3::Element *n_elem;
-        if (this->get_element(page, pos, n_elem)) {
+        if (this->get_element(pos, n_elem)) {
             n_elem->p_parent = result;
             result->p_descendants.push_back(n_elem);
         }
     }
     // Close tag (if open tag is not self-closed)
     if (!self_closed) {
-        this->get_tag_close(page, pos, result);
+        this->get_tag_close(pos, result);
         return true;  // Always successful
     }
     return true;
 }
 
 bool us3::ElementParser::get_tag_open(
-        const us3::String& page,
         int& pos,
         us3::Element*& result,
         bool& self_closed)
@@ -1528,7 +1528,6 @@ bool us3::ElementParser::get_tag_open(
 }
 
 bool us3::ElementParser::get_tag_close(
-        const us3::String& page,
         int& pos,
         us3::Element*& result)
 {
@@ -1540,8 +1539,54 @@ bool us3::ElementParser::get_tag_close(
     return true;
 }
 
+bool us3::ElementParser::get_tag_raw(
+        int& pos,
+        us3::Element*& result)
+{
+    // HTML 5.3: 8.1.2.2. End tags
+    // 4. After the tag name, there may be one or more space characters.
+    // 5. Finally, end tags must be closed by a U+003E GREATER-THAN SIGN
+    //    character (>).
+    us3::String match_str = us3::String("</") + result->name;
+    // Therefore we do not match the closing bracket, for now.
+    int npos = pos - 1;  // Magic -1 for following +1
+    while (npos < page.length()) {
+        npos = page_lower.find(match_str, npos + 1);
+        if (npos == -1) {  // No terminating tag
+            npos = page.length();
+            break;
+        }
+        // Validate this tag
+        int vpos = npos + match_str.length();
+        vpos = page.find_first_not_of(chardet_table.s_space, vpos);
+        if (vpos == -1) {
+            npos = page.length();
+            break;
+        } else if (page[vpos] != '>') {
+            npos = vpos;
+            continue;
+        }
+        // This is a correct tag
+        break;
+    }
+    // Create new NavigableString element to insert into
+    us3::Element *cont = new us3::Element();
+    cont->p_type = NavigableString;
+    cont->p_content = page.substr(pos, npos - 1);
+    cont->p_parent = result;
+    result->p_descendants.push_back(cont);
+    // Update position
+    if (npos < page.length()) {
+        pos = page.find_first_of(">", npos);
+        if (pos == -1)
+            pos = page.length();
+    } else {
+        pos = npos;
+    }
+    return true;
+}
+
 bool us3::ElementParser::get_corrupted_tag(
-        const us3::String& page,
         int& pos)
 {
     pos = page.find_first_of(">", pos) + 1;
@@ -1551,7 +1596,6 @@ bool us3::ElementParser::get_corrupted_tag(
 }
 
 bool us3::ElementParser::get_comment(
-        const us3::String& page,
         int& pos,
         us3::Element*& result)
 {
@@ -1572,6 +1616,8 @@ bool us3::ElementParser::get_comment(
 
 us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
+    this->page = content;
+    this->page_lower = content.lower();
     us3::Element *dom = new us3::Element();
     us3::String buffer;
     int pos = 0;
@@ -1579,20 +1625,20 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     dom->name = "[document]";
     // Parse Doctype first, if there is any
     us3::Element *doctype;
-    this->get_string(content, pos, buffer);
-    if (this->get_doctype(content, pos, doctype)) {
+    this->get_string(pos, buffer);
+    if (this->get_doctype(pos, doctype)) {
         doctype->p_parent = dom;
         dom->p_descendants.push_back(doctype);
     }
     // Parse html tag
     us3::Element *ehtml;
-    this->get_string(content, pos, buffer);
-    if (this->get_element(content, pos, ehtml)) {
+    this->get_string(pos, buffer);
+    if (this->get_element(pos, ehtml)) {
         ehtml->p_parent = dom;
         dom->p_descendants.push_back(ehtml);
     }
     // Finalize HTML parse
-    this->get_string(content, pos, buffer);
+    this->get_string(pos, buffer);
     dom->p_parent = nullptr;
     return dom;
 }
@@ -1631,7 +1677,7 @@ void dfs(Element* e)
 
 int main()
 {
-    ifstream fin("b.html");
+    ifstream fin("sample.html");
     string str = "", tmp;
     while (getline(fin, tmp))
         str += tmp + "\n";
