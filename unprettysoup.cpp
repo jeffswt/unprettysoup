@@ -1295,22 +1295,49 @@ us3::Element::Element(void)
     return ;
 }
 
-us3::Element us3::UnprettySoup(const String& str)
+us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
-    us3::Element elem;
-    return elem;
+    us3::Element *dom = new us3::Element();
+    us3::String buffer;
+    int pos = 0;
+    dom->p_type = Tag;
+    dom->name = "[document]";
+    // Parse Doctype first, if there is any
+    us3::Element *doctype;
+    this->get_string(content, pos, buffer);
+    if (this->get_doctype(content, pos, doctype)) {
+        doctype->p_parent = dom;
+        dom->p_descendants.push_back(doctype);
+    }
+    // Parse html tag
+    us3::Element *ehtml;
+    this->get_string(content, pos, buffer);
+    if (this->get_element_main(content, pos, ehtml)) {
+        ehtml->p_parent = dom;
+        dom->p_descendants.push_back(ehtml);
+    }
+    // Finalize HTML parse
+    dom->p_parent = nullptr;
+    return dom;
 }
+
+us3::Element* us3::UnprettySoup(const us3::String& str)
+{
+    us3::ElementParser parser;
+    return parser.parse(str);
+}
+
+#include <fstream>
 
 int main()
 {
     using namespace std;
     using namespace us3;
-    String a = "a";
-    cout << a << endl;
-    String& b = a;
-    cout << b << endl;
-    b = "b";
-    cout << b << endl;
-    cout << a << endl;
+    ifstream fin("b.html");
+    string str = "", tmp;
+    while (getline(fin, tmp))
+        str += tmp + "\n";
+    String s = str;
+    cout << s << endl;
     return 0;
 }
