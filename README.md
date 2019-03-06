@@ -19,7 +19,7 @@ If you have questions about Unpretty Soup, or run into problems, consider the [I
 
 ## Quick Start
 
-Here’s an HTML document I’ll be using as an example throughout this document.
+Here's an HTML document I'll be using as an example throughout this document.
 
 ```HTML
 <html><head><title>The Juruo's story</title></head>
@@ -51,13 +51,188 @@ Here’s an HTML document I’ll be using as an example throughout this document
 
 ### Going down
 
+Tags may contain strings and other tags. These elements are the tag's *children*. Unpretty Soup provides a lot of different methods for navigating and iterating over a tag's children.
+
+Note that Unpretty Soup strings don't support any of these methods (though you can call them, you can't actually get anything useful), because a string can't have children.
+
+#### Navigating using tag names
+
+The simplest way to navigate the parse tree is to say the name of the tag you want. If you want the `<head>` tag, just say `soup->find("head")` (in fact we can't implement it the way Beautiful Soup does, due to the *static* nature of C++):
+
+```C++
+soup->find("head");
+// <head><title>The Juruo's story</title></head>
+soup->find("title");
+// <title>The Juruo's story</title>
+```
+
+You can do use this trick again and again to zoom in on a certain part of the parse tree. This code gets the first `<b>` tag beneath the `<body>` tag:
+
+```C++
+soup->find("body")->find("b");
+// <b>The Juruo's story</b>
+```
+
+Using the tag name with `.find()` will give you only the first tag by that name:
+
+```C++
+soup->find("a");
+// <a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>
+```
+
+If you need to get all the `<a>` tags, or anything more complicated than the first tag with a certain name, you'll need to use one of the methods described in [Searching the tree](), such as `.find_all()`:
+
+```C++
+soup->find_all("a");
+// [<a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>,
+//  <a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>,
+//  <a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>]
+```
+
+#### .contents() and .children()
+
+A tag's children are available in a vector called `.contents()`:
+
+```C++
+auto head_tag = soup->find("head");
+// <head><title>The Juruo's story</title></head>
+
+head_tag->contents();
+// [<title>The Juruo's story</title>]
+
+auto title_tag = head_tag->contents()[0];
+// <title>The Juruo's story</title>
+title_tag->contents();
+// ["The Juruo's story"]
+```
+
+The highest-level tag itself has children. In this case, the `<!DOCTYPE>` tag and the `<html>` tag are children of that tag:
+
+```C++
+soup->contents();
+// 1 or 2, depending if there's a <!DOCTYPE> or not, 1 in the example
+soup->contents[0]->name
+// "html"
+```
+
+A string has empty `.contents()`, because it doesn't contain anything:
+
+```C++
+auto text = title_tag->contents()[0];
+text->contents();
+// []
+```
+
+The `.children()` method is an alias of `.contents()` (We didn't even try to implement a generator, though).
+
+```C++
+for (auto child : title_tag.children())
+    cout << child->repr() << endl;
+// The Juruo's story
+```
+
+#### .descendants()
+
+The `.contents()` and `.children()` methods only consider a tag's *direct* children. For instance, the `<head>` tag has a single direct child - the `<title>` tag:
+
+```C++
+head_tag->contents();
+// [<title>The Juruo's story</title>]
+```
+
+But the `<title>` tag itself has a child: the string "The Juruo's story". There's a sense in which that string is also a child of the `<head>` tag. The `.descendants()` method lets you iterate over all of a tag's children, recursively: its direct children, the children of its direct children, and so on:
+
+```C++
+for (auto child : head_tag->descendants())
+    cout << child->repr() << endl;
+// <title>The Juruo's story</title>
+// "The Juruo's story"
+```
+
+The `<head>` tag has only one child, but it has two descendants: the `<title>` tag and the `<title>` tag's child. The highest-level tag only has one (or two?) direct child (-ren) (the `<html>` tag), but it has a whole lot of descendants:
+
+```C++
+soup->children().length();
+// 1
+soup->descendants().length();
+// Something around 25
+```
+
+#### .string()
+
+If a tag has only one child, and that child is a `NavigableString`, the child is made available as `.string()`:
+
+```C++
+title_tag->string();
+// "The Juruo's story"
+```
+
+If a tag's only child is another tag, and that tag has a `.string()`, then the parent tag is considered to have the same `.string` as its child:
+
+```C++
+head_tag->contents();
+// [<title>The Juruo's story</title>]
+
+head_tag->string();
+// "The Juruo's story"
+```
+
+If a tag contains more than one thing, then it's not clear what `.string()` should refer to, so `.string()` is defined to be an empty string:
+
+```C++
+cout << soup->find("html")->string() << endl;
+// ""
+```
+
+#### .strings() and .stripped_strings()
+
+If there's more than one thing inside a tag, you can still look at just the strings. Use the `.strings()` method. The method yields a vector of `NavigableString`s, where you can edit them:
+
+```C++
+for (Element* str : soup->strings())
+    cout << str->repr() << endl;
+// "The Juruo's story"
+// "\n\n"
+// "The Juruo's story"
+// "\n\n"
+// "Once upon a time there were three little juruos; and their names were\n"
+// "jeffswt"
+// ",\n"
+// "swt"
+// " and\n"
+// "juruoswt"
+// ";\nand they always fail exams."
+// "\n\n"
+// "..."
+// "\n"
+```
+
+These strings tend to have a lot of extra whitespace, which you can remove by using the `.stripped_strings()` method instead (however this method returns a vector of strings, not of `NavigableString`s):
+
+```C++
+for (String str : soup->stripped_strings())
+    cout << str << endl;
+// "The Juruo's story"
+// "The Juruo's story"
+// "Once upon a time there were three little juruos; and their names were"
+// "jeffswt"
+// ","
+// "swt"
+// "and"
+// "juruoswt"
+// ";\nand they always fail exams."
+// "..."
+```
+
+Here, strings consisting entirely of whitespace are ignored, and whitespace at the beginning and end of strings is removed.
+
 ### Going up
 
-Continuing the “family tree” analogy, every tag and every string has a *parent*: the tag that contains it.
+Continuing the "family tree" analogy, every tag and every string has a *parent*: the tag that contains it.
 
 #### .parent()
 
-You can access an element’s parent with the `.parent()` method. In the example “three sisters" document, the `<head>` tag is the parent of the `<title>` tag:
+You can access an element's parent with the `.parent()` method. In the example "three sisters" document, the `<head>` tag is the parent of the `<title>` tag:
 
 ```C++
 auto title_tag = soup->find("title");
@@ -90,7 +265,7 @@ soup->parent();
 
 #### .parents()
 
-You can iterate over all of an element’s parents with `.parents()`. This example uses `.parents()` to travel from an `<a>` tag buried deep within the document, to the very top of the document:
+You can iterate over all of an element's parents with `.parents()`. This example uses `.parents()` to travel from an `<a>` tag buried deep within the document, to the very top of the document:
 
 ```C++
 auto link = soup->find("a");
@@ -129,7 +304,7 @@ cout << sibling_soup->prettify();
 // </html>
 ```
 
-The `<b>` tag and the `<c>` tag are at the same level: they’re both direct children of the same tag. We call them *siblings*. When a document is pretty-printed, siblings show up at the same indentation level. You can also use this relationship in the code you write.
+The `<b>` tag and the `<c>` tag are at the same level: they're both direct children of the same tag. We call them *siblings*. When a document is pretty-printed, siblings show up at the same indentation level. You can also use this relationship in the code you write.
 
 #### .next_sibling() and .previous_sibling()
 
@@ -142,7 +317,7 @@ sibling_soup->find("c")->previous_sibling();
 // <b>text1</b>
 ```
 
-The `<b>` tag has a `.next_sibling()`, but no `.previous_sibling()`, because there’s nothing before the `<b>` tag on the same level of the tree. For the same reason, the `<c>` tag has a `.previous_sibling()` but no `.next_sibling()`:
+The `<b>` tag has a `.next_sibling()`, but no `.previous_sibling()`, because there's nothing before the `<b>` tag on the same level of the tree. For the same reason, the `<c>` tag has a `.previous_sibling()` but no `.next_sibling()`:
 
 ```C++
 sibling_soup->find("b")->previous_sibling();
@@ -151,7 +326,7 @@ sibling_soup->find("c")->next_sibling();
 // nullptr
 ```
 
-The strings “text1” and “text2” are not siblings, because they don’t have the same parent:
+The strings "text1" and "text2" are not siblings, because they don't have the same parent:
 
 ```C++
 sibling_soup->find("b")->find("[string]");
@@ -160,7 +335,7 @@ sibling_soup->find("b")->find("[string]")->next_sibling();
 // nullptr, not text2
 ```
 
-In real documents, the `.next_sibling` or `.previous_sibling` of a tag will usually be a string containing whitespace. Going back to the “three sisters” document:
+In real documents, the `.next_sibling()` or `.previous_sibling()` of a tag will usually be a string containing whitespace. Going back to the "three juruos" document:
 
 ```html
 <a href="http://example.com/jeffswt" class="juruo" id="link1">jeffswt</a>
@@ -168,7 +343,7 @@ In real documents, the `.next_sibling` or `.previous_sibling` of a tag will usua
 <a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>
 ```
 
-You might think that the `.next_sibling()` of the first `<a>` tag would be the second `<a>` tag. But actually, it’s a string: the comma and newline that separate the first `<a>` tag from the second:
+You might think that the `.next_sibling()` of the first `<a>` tag would be the second `<a>` tag. But actually, it's a string: the comma and newline that separate the first `<a>` tag from the second:
 
 ```C++
 auto link = soup->find("a");
@@ -186,7 +361,7 @@ link->next_sibling()->next_sibling();
 
 #### .next_siblings() and .previous_siblings()
 
-You can iterate over a tag’s siblings with `.next_siblings()` or `.previous_siblings()`:
+You can iterate over a tag's siblings with `.next_siblings()` or `.previous_siblings()`:
 
 ```C++
 for (auto sibling : soup->find("a")->next_siblings())
