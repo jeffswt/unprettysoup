@@ -181,8 +181,10 @@ namespace us3
         // Traversal functions
         std::vector<Element*> contents(bool);
         std::vector<Element*> children(bool);
+        void descendants(std::vector<Element*>&, bool);
         std::vector<Element*> descendants(bool);
         Element* string(void);
+        void strings(std::vector<Element*>&);
         std::vector<Element*> strings(void);
         std::vector<String> stripped_strings(void);
         Element* parent(void);
@@ -192,9 +194,13 @@ namespace us3
         std::vector<Element*> next_siblings(int);
         std::vector<Element*> previous_siblings(int);
         // Element query functions
-        // std::vector<Element*> find_all(bool (*)(Element*),
-        //         std::map<String, String>, bool, int);
+        void find_all(std::vector<Element*>&, std::function<bool(Element*)>,
+                      std::map<String, String>, bool, int);
+        std::vector<Element*> find_all(std::function<bool(Element*)>,
+                                       std::map<String, String>, bool, int);
         // String query functions
+        void find_all_s(std::vector<Element*>&,
+                        std::function<bool(const String&)>, bool, int);
         std::vector<Element*> find_all_s(std::function<bool(const String&)>,
                                          bool, int);
         std::vector<Element*> find_all_s(const std::set<String>&, bool, int);

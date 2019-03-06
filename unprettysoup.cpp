@@ -1344,23 +1344,29 @@ std::vector<us3::Element*> us3::Element::children(
     return vec;
 }
 
-std::vector<us3::Element*> us3::Element::descendants(
+void us3::Element::descendants(
+        std::vector<us3::Element*>& vec,
         bool show_empty_strings = false)
 {
-    std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
             if (show_empty_strings || elem->content.length() > 0)
                 vec.push_back(elem);
         } else if (elem->type == Tag) {
             vec.push_back(elem);
-            std::vector<us3::Element*> n_vec = elem->descendants();
-            for (auto n_elem : n_vec)
-                vec.push_back(n_elem);
+            elem->descendants(vec, show_empty_strings);
         } else {
             vec.push_back(elem);
         }
     }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::descendants(
+        bool show_empty_strings = false)
+{
+    std::vector<us3::Element*> vec;
+    this->descendants(vec, show_empty_strings);
     return vec;
 }
 
@@ -1374,19 +1380,23 @@ us3::Element* us3::Element::string(void)
     return nullptr;
 }
 
-std::vector<us3::Element*> us3::Element::strings(void)
+void us3::Element::strings(std::vector<us3::Element*>& vec)
 {
-    std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
             if (elem->content.length() > 0)
                 vec.push_back(elem);
         } else if (elem->type == Tag) {
-            std::vector<us3::Element*> n_vec = elem->strings();
-            for (auto n_elem : n_vec)
-                vec.push_back(n_elem);
+            elem->strings(vec);
         }
     }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::strings(void)
+{
+    std::vector<us3::Element*> vec;
+    this->strings(vec);
     return vec;
 }
 
@@ -1476,28 +1486,55 @@ std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
     return vec;
 }
 
+void us3::Element::find_all(
+        std::vector<us3::Element*>& vec,
+        std::function<bool(Element*)> tag_check_func,
+        std::map<String, String> attrs,
+        bool recursive = true,
+        int limit = 0)
+{
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        std::function<bool(Element*)> tag_check_func,
+        std::map<String, String> attrs,
+        bool recursive = true,
+        int limit = 0)
+{
+    std::vector<us3::Element*> vec;
+    this->find_all(vec, tag_check_func, attrs, recursive, limit);
+    return vec;
+}
+
+void us3::Element::find_all_s(
+        std::vector<us3::Element*>& vec,
+        std::function<bool(const us3::String&)> check_func,
+        bool recursive = true,
+        int limit = 0)
+{
+    if (this->type == NavigableString) {
+        if (this->content.length() > 0 && check_func(this->content))
+            vec.push_back(this);
+        return ;
+    }
+    for (auto elem : this->p_children) {
+        int n_limit = limit <= 0 ? 0 : std::max(1, limit - int(vec.size()));
+        if (recursive || elem->type == NavigableString)
+            elem->find_all_s(vec, check_func, recursive, n_limit);
+        if (limit > 0 && vec.size() >= limit)
+            break;
+    }
+    return ;
+}
+
 std::vector<us3::Element*> us3::Element::find_all_s(
         std::function<bool(const us3::String&)> check_func,
         bool recursive = true,
         int limit = 0)
 {
     std::vector<us3::Element*> vec;
-    if (this->type == NavigableString) {
-        if (this->content.length() > 0 && check_func(this->content))
-            vec.push_back(this);
-        return vec;
-    }
-    for (auto elem : this->p_children) {
-        std::vector<us3::Element*> n_vec;
-        int n_limit = limit <= 0 ? 0 : std::max(1, limit - int(vec.size()));
-        if (recursive || elem->type == NavigableString)
-            n_vec = elem->find_all_s(check_func, recursive, n_limit);
-        for (auto n_elem : n_vec)
-            if (limit <= 0 || vec.size() < limit)
-                vec.push_back(n_elem);
-        if (limit > 0 && vec.size() >= limit)
-            break;
-    }
+    this->find_all_s(vec, check_func, recursive, limit);
     return vec;
 }
 
@@ -1546,6 +1583,8 @@ std::vector<us3::Element*> us3::Element::find_all_s(
         bool recursive = true,
         int limit = 0)
 {
+    if (check_filter == false)
+        return std::vector<us3::Element*>();  // One be unwise to do this
     auto check_func = [check_filter](const us3::String& str) {
         return check_filter;
     };
