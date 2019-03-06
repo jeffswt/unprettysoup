@@ -111,7 +111,7 @@ The highest-level tag itself has children. In this case, the `<!DOCTYPE>` tag an
 ```C++
 soup->contents();
 // 1 or 2, depending if there's a <!DOCTYPE> or not, 1 in the example
-soup->contents[0]->name
+soup->contents[0]->name;
 // "html"
 ```
 
@@ -125,10 +125,14 @@ text->contents();
 
 The `.children()` method is an alias of `.contents()` (We didn't even try to implement a generator, though).
 
+Under Unpretty Soup's implementation, any two adjacent `Tag`s have one and only one `NavigableString` in between. If that certain string is empty, it would not be considered visible by default. If you insisting on displaying that empty string, you may specify a parameter `show_empty_strings=true` like this:
+
 ```C++
-for (auto child : title_tag.children())
+for (auto child : head_tag->contents(true))
     cout << child->repr() << endl;
-// The Juruo's story
+// ""
+// <title>The Juruo's story</title>
+// ""
 ```
 
 #### .descendants()

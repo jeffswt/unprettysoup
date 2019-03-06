@@ -1317,6 +1317,85 @@ us3::Element::Element(void)
     return ;
 }
 
+std::vector<us3::Element*> us3::Element::contents(
+        bool show_empty_strings = false)
+{
+    return this->children(show_empty_strings);
+}
+
+std::vector<us3::Element*> us3::Element::children(
+        bool show_empty_strings = false)
+{
+    std::vector<us3::Element*> vec;
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (show_empty_strings || elem->p_content.length() > 0)
+                vec.push_back(elem);
+        } else {
+            vec.push_back(elem);
+        }
+    }
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::descendants(
+        bool show_empty_strings = false)
+{
+    std::vector<us3::Element*> vec;
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (show_empty_strings || elem->p_content.length() > 0)
+                vec.push_back(elem);
+        } else if (elem->type == Tag) {
+            vec.push_back(elem);
+            std::vector<us3::Element*> n_vec = elem->descendants();
+            for (auto n_elem : n_vec)
+                vec.push_back(n_elem);
+        } else {
+            vec.push_back(elem);
+        }
+    }
+    return vec;
+}
+
+us3::Element* us3::Element::string(void)
+{
+    if (this->p_children.size() == 1)  // Must be a NavigableString
+        return this->p_children[0];
+    std::vector<us3::Element*> ch = this->children();
+    if (this->ch.size() == 1)
+        return ch->string();
+    return nullptr;
+}
+
+std::vector<us3::Element*> us3::Element::strings(void)
+{
+    std::vector<us3::Element*> vec;
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (elem->p_content.length() > 0)
+                vec.push_back(elem);
+        } else if (elem->type == Tag) {
+            std::vector<us3::Element*> n_vec = elem->strings();
+            for (auto n_elem : n_vec)
+                vec.push_back(n_elem);
+        }
+    }
+    return vec;
+}
+
+std::vector<us3::String> us3::Element::stripped_strings(void)
+{
+    std::vector<us3::Element*> inp = this->strings();
+    std::vector<us3::String> vec;
+    for (auto elem : inp) {
+        us3::String tmp = elem->p_content.strip();
+        if (tmp.length() > 0)
+            vec.push_back(tmp);
+    }
+    return vec;
+}
+
 us3::Element* us3::Element::parent(void)
 {
     return this->p_parent;
@@ -1356,11 +1435,11 @@ std::vector<us3::Element*> us3::Element::next_siblings(int limit = 0)
     if (par == nullptr)
         return vec;
     bool do_push = false;
-    for (int i = 0; i < par->p_descendants.size(); i++) {
-        if (par->p_descendants[i] == this) {
+    for (int i = 0; i < par->p_children.size(); i++) {
+        if (par->p_children[i] == this) {
             do_push = true;
         } else if (do_push) {
-            us3::Element *cur = par->p_descendants[i];
+            us3::Element *cur = par->p_children[i];
             if (cur->type != NavigableString || cur->p_content.length() > 0)
                 vec.push_back(cur);
             if (limit > 0 && vec.size() >= limit)
@@ -1377,11 +1456,11 @@ std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
     if (par == nullptr)
         return vec;
     bool do_push = false;
-    for (int i = par->p_descendants.size() - 1; i >= 0; i--) {
-        if (par->p_descendants[i] == this) {
+    for (int i = par->p_children.size() - 1; i >= 0; i--) {
+        if (par->p_children[i] == this) {
             do_push = true;
         } else if (do_push) {
-            us3::Element *cur = par->p_descendants[i];
+            us3::Element *cur = par->p_children[i];
             if (cur->type != NavigableString || cur->p_content.length() > 0)
                 vec.push_back(cur);
             if (limit > 0 && vec.size() >= limit)
@@ -1488,7 +1567,7 @@ bool us3::ElementParser::get_tag(
         s_elem->type = NavigableString;
         s_elem->p_content = str;
         s_elem->p_parent = result;
-        result->p_descendants.push_back(s_elem);
+        result->p_children.push_back(s_elem);
         // Encountered close tag
         if (page[pos] == '<' && page[pos + 1] == '/')
             break;
@@ -1496,7 +1575,7 @@ bool us3::ElementParser::get_tag(
         us3::Element *n_elem;
         if (this->get_element(pos, n_elem)) {
             n_elem->p_parent = result;
-            result->p_descendants.push_back(n_elem);
+            result->p_children.push_back(n_elem);
         }
     }
     // Close tag (if open tag is not self-closed)
@@ -1647,7 +1726,7 @@ bool us3::ElementParser::get_tag_raw(
     cont->type = NavigableString;
     cont->p_content = page.substr(pos, npos - 1);
     cont->p_parent = result;
-    result->p_descendants.push_back(cont);
+    result->p_children.push_back(cont);
     // Update position
     if (npos < page.length()) {
         pos = page.find_first_of(">", npos);
@@ -1701,14 +1780,14 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     this->get_string(pos, buffer);
     if (this->get_doctype(pos, doctype)) {
         doctype->p_parent = dom;
-        dom->p_descendants.push_back(doctype);
+        dom->p_children.push_back(doctype);
     }
     // Parse html tag
     us3::Element *ehtml;
     this->get_string(pos, buffer);
     if (this->get_element(pos, ehtml)) {
         ehtml->p_parent = dom;
-        dom->p_descendants.push_back(ehtml);
+        dom->p_children.push_back(ehtml);
     }
     // Finalize HTML parse
     this->get_string(pos, buffer);
@@ -1763,7 +1842,7 @@ void dfs(Element* e)
     for (auto p : e->p_attrs) {
         cout << "    " << p.first << " = " << p.second << "\n";
     }
-    for (auto q : e->p_descendants)
+    for (auto q : e->p_children)
         dfs(q);
     if (e->type == Tag)
         cout << "<end of us3.Tag '" << e->name << "'>\n";

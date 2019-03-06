@@ -165,7 +165,7 @@ namespace us3
         std::map<String, String> p_attrs;  // Element attributes [Tag]
         // Relations
         Element* p_parent;
-        std::vector<Element*> p_descendants;
+        std::vector<Element*> p_children;
     public:
         ElementType type;  // Element type
         String name;  // Element name [Tag]
@@ -177,6 +177,12 @@ namespace us3
         // String attrs_get(const String&) const;
         // void attrs_set(const String&, const String&);
         // Traversal functions
+        std::vector<Element*> contents(bool);
+        std::vector<Element*> children(bool);
+        std::vector<Element*> descendants(bool);
+        Element* string(void);
+        std::vector<Element*> strings(void);
+        std::vector<String> stripped_strings(void);
         Element* parent(void);
         std::vector<Element*> parents(int);
         Element* next_sibling(void);
