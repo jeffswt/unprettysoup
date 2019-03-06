@@ -195,9 +195,16 @@ namespace us3
         std::vector<Element*> previous_siblings(int);
         // Element query functions
         void find_all(std::vector<Element*>&, std::function<bool(Element*)>,
-                      std::map<String, String>, bool, int);
+                      std::map<String, String>, int, int);
         std::vector<Element*> find_all(std::function<bool(Element*)>,
                                        std::map<String, String>, bool, int);
+        std::vector<Element*> find_all(const std::set<String>&,
+                                       std::map<String, String>, bool, int);
+        std::vector<Element*> find_all(const std::vector<String>&,
+                                       std::map<String, String>, bool, int);
+        std::vector<Element*> find_all(const String&,
+                                       std::map<String, String>, bool, int);
+        std::vector<Element*> find_all(std::map<String, String>, bool, int);
         // String query functions
         void find_all_s(std::vector<Element*>&,
                         std::function<bool(const String&)>, bool, int);
@@ -207,7 +214,6 @@ namespace us3
         std::vector<Element*> find_all_s(const std::vector<String>&, bool,
                                          int);
         std::vector<Element*> find_all_s(const String&, bool, int);
-        std::vector<Element*> find_all_s(bool, bool, int);
         // Element modification functions
         // Friends
         friend class ElementParser;

@@ -1490,21 +1490,118 @@ void us3::Element::find_all(
         std::vector<us3::Element*>& vec,
         std::function<bool(Element*)> tag_check_func,
         std::map<String, String> attrs,
-        bool recursive = true,
+        int recursive = 1,
         int limit = 0)
 {
+    if (this->type != Tag)
+        return ;
+    bool can_push = true;
+    // Checking this tag using function
+    if (!tag_check_func(this))
+        can_push = false;
+    // Checking according to attributes
+    if (can_push) {
+        for (auto attr : attrs) {
+            if (this->p_attrs.find(attr.first) == this->p_attrs.end())
+                can_push = false;
+            // Classes should be treated differently
+            if (attr.first == "class") {
+                auto v_s = this->p_attrs[attr.first].split(" "),
+                     v_p = attr.second.split(" ");
+                // O(log n) query and deduplication
+                std::set<us3::String> s_s;
+                for (auto cls : v_s)
+                    if (cls.length() > 0)
+                        s_s.insert(cls);
+                // Looking up classes
+                for (auto cls : v_p) {
+                    auto lookup = cls.strip();
+                    if (lookup.length() > 0 && s_s.find(lookup) == s_s.end()) {
+                        can_push = false;
+                        break;
+                    }
+                }
+            } else {
+                if (this->p_attrs[attr.first] != attr.second)
+                    can_push = false;
+            }
+            if (!can_push)
+                break;
+        }
+    }
+    // Push back if okay
+    if (can_push)
+        vec.push_back(this);
+    // Recurse, if available
+    if (recursive >= 0) {
+        int n_recursive = recursive <= 0 ? -1 : 1;
+        for (auto elem : this->p_children) {
+            elem->find_all(vec, tag_check_func, attrs, n_recursive, limit);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
     return ;
 }
 
 std::vector<us3::Element*> us3::Element::find_all(
         std::function<bool(Element*)> tag_check_func,
-        std::map<String, String> attrs,
+        std::map<String, String> attrs = std::map<String, String>(),
         bool recursive = true,
         int limit = 0)
 {
     std::vector<us3::Element*> vec;
-    this->find_all(vec, tag_check_func, attrs, recursive, limit);
+    this->find_all(vec, tag_check_func, attrs, recursive ? 1 : 0, limit);
     return vec;
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const std::set<us3::String>& tags,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true,
+        int limit = 0)
+{
+    auto check_func = [&tags](const us3::Element* elem) {
+        if (tags.find(elem->name) != tags.end())
+            return true;
+        return false;
+    };
+    return this->find_all(check_func, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const std::vector<us3::String>& tags,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true,
+        int limit = 0)
+{
+    std::set<us3::String> st;
+    for (auto str : tags)
+        st.insert(str);
+    return this->find_all(st, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const us3::String& tag,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true,
+        int limit = 0)
+{
+    std::set<us3::String> st;
+    st.insert(tag);
+    return this->find_all(st, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true,
+        int limit = 0)
+{
+    std::function<bool(us3::Element*)> check_func =
+    [](const us3::Element* elem) {
+        return true;
+    };
+    return this->find_all(check_func, attrs, recursive, limit);
 }
 
 void us3::Element::find_all_s(
@@ -1519,9 +1616,8 @@ void us3::Element::find_all_s(
         return ;
     }
     for (auto elem : this->p_children) {
-        int n_limit = limit <= 0 ? 0 : std::max(1, limit - int(vec.size()));
         if (recursive || elem->type == NavigableString)
-            elem->find_all_s(vec, check_func, recursive, n_limit);
+            elem->find_all_s(vec, check_func, recursive, limit);
         if (limit > 0 && vec.size() >= limit)
             break;
     }
@@ -1544,14 +1640,9 @@ std::vector<us3::Element*> us3::Element::find_all_s(
         int limit = 0)
 {
     auto check_func = [&check_set](const us3::String& str) {
-        for (auto pattern : check_set) {
-            if (str.startswith("[regex]:")) {
-                // TODO: No regex matcher implemented
-            } else {
-                if (str.find(pattern) != -1)
-                    return true;
-            }
-        }
+        for (auto pattern : check_set)
+            if (str.find(pattern) != -1)
+                return true;
         return false;
     };
     return this->find_all_s(check_func, recursive, limit);
@@ -1576,19 +1667,6 @@ std::vector<us3::Element*> us3::Element::find_all_s(
     std::set<us3::String> st;
     st.insert(check_str);
     return this->find_all_s(st, recursive, limit);
-}
-
-std::vector<us3::Element*> us3::Element::find_all_s(
-        bool check_filter,
-        bool recursive = true,
-        int limit = 0)
-{
-    if (check_filter == false)
-        return std::vector<us3::Element*>();  // One be unwise to do this
-    auto check_func = [check_filter](const us3::String& str) {
-        return check_filter;
-    };
-    return this->find_all_s(check_func, recursive, limit);
 }
 
 bool us3::ElementParser::get_string(
@@ -1939,9 +2017,9 @@ int main()
 {
     ifstream fin("juruo.html");
     auto soup = UnprettySoup(fin);
-    auto lst = soup->find_all_s(String("swt"));
+    auto lst = soup->find_all("a");
     for (auto elem : lst) {
-        cout << elem->content.repr() << "*\n";
+        cout << elem->name.repr() << "\n";
     }
     return 0;
 }
