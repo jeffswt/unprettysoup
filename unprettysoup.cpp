@@ -1150,6 +1150,12 @@ us3::String us3::String::replace(const us3::String& pattern,
     return result;
 }
 
+us3::String us3::String::repr(void) const
+{
+    return us3::String("\"") + this->replace("\r", "\\r").replace(
+           "\n", "\\n").replace("\"", "\\\"") + us3::String("\"");
+}
+
 us3::String us3::String::reversed(void) const
 {
     us3::String result;
@@ -1329,7 +1335,7 @@ std::vector<us3::Element*> us3::Element::children(
     std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
-            if (show_empty_strings || elem->p_content.length() > 0)
+            if (show_empty_strings || elem->content.length() > 0)
                 vec.push_back(elem);
         } else {
             vec.push_back(elem);
@@ -1344,7 +1350,7 @@ std::vector<us3::Element*> us3::Element::descendants(
     std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
-            if (show_empty_strings || elem->p_content.length() > 0)
+            if (show_empty_strings || elem->content.length() > 0)
                 vec.push_back(elem);
         } else if (elem->type == Tag) {
             vec.push_back(elem);
@@ -1363,8 +1369,8 @@ us3::Element* us3::Element::string(void)
     if (this->p_children.size() == 1)  // Must be a NavigableString
         return this->p_children[0];
     std::vector<us3::Element*> ch = this->children();
-    if (this->ch.size() == 1)
-        return ch->string();
+    if (ch.size() == 1)
+        return ch[0]->string();
     return nullptr;
 }
 
@@ -1373,7 +1379,7 @@ std::vector<us3::Element*> us3::Element::strings(void)
     std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
-            if (elem->p_content.length() > 0)
+            if (elem->content.length() > 0)
                 vec.push_back(elem);
         } else if (elem->type == Tag) {
             std::vector<us3::Element*> n_vec = elem->strings();
@@ -1389,7 +1395,7 @@ std::vector<us3::String> us3::Element::stripped_strings(void)
     std::vector<us3::Element*> inp = this->strings();
     std::vector<us3::String> vec;
     for (auto elem : inp) {
-        us3::String tmp = elem->p_content.strip();
+        us3::String tmp = elem->content.strip();
         if (tmp.length() > 0)
             vec.push_back(tmp);
     }
@@ -1440,7 +1446,7 @@ std::vector<us3::Element*> us3::Element::next_siblings(int limit = 0)
             do_push = true;
         } else if (do_push) {
             us3::Element *cur = par->p_children[i];
-            if (cur->type != NavigableString || cur->p_content.length() > 0)
+            if (cur->type != NavigableString || cur->content.length() > 0)
                 vec.push_back(cur);
             if (limit > 0 && vec.size() >= limit)
                 break;
@@ -1461,7 +1467,7 @@ std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
             do_push = true;
         } else if (do_push) {
             us3::Element *cur = par->p_children[i];
-            if (cur->type != NavigableString || cur->p_content.length() > 0)
+            if (cur->type != NavigableString || cur->content.length() > 0)
                 vec.push_back(cur);
             if (limit > 0 && vec.size() >= limit)
                 break;
@@ -1532,7 +1538,7 @@ bool us3::ElementParser::get_doctype(
     }
     result = new us3::Element();
     result->type = Doctype;
-    result->p_content = page.substr(pos + 9, npos - 1).strip();
+    result->content = page.substr(pos + 9, npos - 1).strip();
     pos = npos + 1;
     return true;
 }
@@ -1565,7 +1571,7 @@ bool us3::ElementParser::get_tag(
         // Insert NavigableString element
         us3::Element *s_elem = new us3::Element();
         s_elem->type = NavigableString;
-        s_elem->p_content = str;
+        s_elem->content = str;
         s_elem->p_parent = result;
         result->p_children.push_back(s_elem);
         // Encountered close tag
@@ -1724,7 +1730,7 @@ bool us3::ElementParser::get_tag_raw(
     // Create new NavigableString element to insert into
     us3::Element *cont = new us3::Element();
     cont->type = NavigableString;
-    cont->p_content = page.substr(pos, npos - 1);
+    cont->content = page.substr(pos, npos - 1);
     cont->p_parent = result;
     result->p_children.push_back(cont);
     // Update position
@@ -1756,12 +1762,12 @@ bool us3::ElementParser::get_comment(
     result = new us3::Element();
     result->type = Comment;
     if (npos == -1) {
-        result->p_content = page.substr(pos, page.length() - 1).strip();
+        result->content = page.substr(pos, page.length() - 1).strip();
         pos = page.length();
         return true;
     }
     int npos2 = page.find_last_not_of("-", npos);
-    result->p_content = page.substr(pos, npos2).strip();
+    result->content = page.substr(pos, npos2).strip();
     pos = npos + 3;
     return true;
 }
@@ -1831,13 +1837,13 @@ void dfs(Element* e)
         cout << "<class us3.Tag '" << e->name << "'>\n";
     } else if (e->type == Doctype) {
         cout << "<class us3.Doctype>\n";
-        pstring(e->p_content);
+        pstring(e->content);
     } else if (e->type == NavigableString) {
         cout << "<class us3.NavigableString'>:\n";
-        pstring(e->p_content);
+        pstring(e->content);
     } else if (e->type == Comment) {
         cout << "<class us3.Comment>\n";
-        pstring(e->p_content);
+        pstring(e->content);
     }
     for (auto p : e->p_attrs) {
         cout << "    " << p.first << " = " << p.second << "\n";
@@ -1851,8 +1857,11 @@ void dfs(Element* e)
 
 int main()
 {
-    ifstream fin("sample.html");
+    ifstream fin("juruo.html");
     auto elem = UnprettySoup(fin);
-    dfs(elem);
+    // dfs(elem);
+    for (auto i : elem->strings()) {
+        cout << i->content.repr() << endl;
+    }
     return 0;
 }

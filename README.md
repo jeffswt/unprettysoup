@@ -29,7 +29,8 @@ Here's an HTML document I'll be using as an example throughout this document.
 <p class="story">Once upon a time there were three little juruos; and there names were
 <a href="http://example.com/jeffswt" class="juruo" id="link1">jeffswt</a>,
 <a href="http://example.com/swt" class="juruo" id="link2">swt</a> and
-<a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>; and they always fail exams.</p>
+<a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>;
+and they always fail exams.</p>
 
 <p class="story">...</p>
 </body></html>

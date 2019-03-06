@@ -122,6 +122,7 @@ namespace us3
         String lstrip(const String&) const;
         String lstrip(const std::set<Char>&) const;
         String replace(const String&, const String&, int) const;
+        String repr(void) const;
         String reversed(void) const;
         String rjust(int, const Char&) const;
         String rstrip(void) const;
@@ -161,7 +162,6 @@ namespace us3
     protected:
     public:
         // Data
-        String p_content;  // Contents [Doctype, NavigableString, Comment]
         std::map<String, String> p_attrs;  // Element attributes [Tag]
         // Relations
         Element* p_parent;
@@ -169,6 +169,7 @@ namespace us3
     public:
         ElementType type;  // Element type
         String name;  // Element name [Tag]
+        String content;  // String content [Doctype, NavigableString, Comment]
         // Initializers
         Element(void);
         // Data access functions
