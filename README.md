@@ -26,7 +26,7 @@ Here's an HTML document I'll be using as an example throughout this document.
 <body>
 <p class="title"><b>The Juruo's story</b></p>
 
-<p class="story">Once upon a time there were three little juruos; and there names were
+<p class="story">Once upon a time there were three little juruos; and their names were
 <a href="http://example.com/jeffswt" class="juruo" id="link1">jeffswt</a>,
 <a href="http://example.com/swt" class="juruo" id="link2">swt</a> and
 <a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>;
@@ -210,6 +210,14 @@ for (Element* str : soup->strings())
 // "\n\n"
 // "..."
 // "\n"
+```
+
+Like `.children()`, you may specify `show_empty_strings=true` to display all hidden strings, like:
+
+```C++
+for (Element* str : soup->strings(true))
+    cout << str->repr() << endl;
+// Too many lines, didn't bother to enumerate
 ```
 
 These strings tend to have a lot of extra whitespace, which you can remove by using the `.stripped_strings()` method instead (however this method returns a vector of strings, not of `NavigableString`s):

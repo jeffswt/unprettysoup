@@ -184,8 +184,8 @@ namespace us3
         void descendants(std::vector<Element*>&, bool);
         std::vector<Element*> descendants(bool);
         Element* string(void);
-        void strings(std::vector<Element*>&);
-        std::vector<Element*> strings(void);
+        void strings(std::vector<Element*>&, bool);
+        std::vector<Element*> strings(bool);
         std::vector<String> stripped_strings(void);
         Element* parent(void);
         std::vector<Element*> parents(int);

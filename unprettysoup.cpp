@@ -1380,23 +1380,26 @@ us3::Element* us3::Element::string(void)
     return nullptr;
 }
 
-void us3::Element::strings(std::vector<us3::Element*>& vec)
+void us3::Element::strings(
+        std::vector<us3::Element*>& vec,
+        bool show_empty_strings)
 {
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
-            if (elem->content.length() > 0)
+            if (show_empty_strings || elem->content.length() > 0)
                 vec.push_back(elem);
         } else if (elem->type == Tag) {
-            elem->strings(vec);
+            elem->strings(vec, show_empty_strings);
         }
     }
     return ;
 }
 
-std::vector<us3::Element*> us3::Element::strings(void)
+std::vector<us3::Element*> us3::Element::strings(
+        bool show_empty_strings = false)
 {
     std::vector<us3::Element*> vec;
-    this->strings(vec);
+    this->strings(vec, show_empty_strings);
     return vec;
 }
 
