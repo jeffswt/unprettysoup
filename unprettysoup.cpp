@@ -1476,6 +1476,82 @@ std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
     return vec;
 }
 
+std::vector<us3::Element*> us3::Element::find_all_s(
+        std::function<bool(const us3::String&)> check_func,
+        bool recursive = true,
+        int limit = 0)
+{
+    std::vector<us3::Element*> vec;
+    if (this->type == NavigableString) {
+        if (this->content.length() > 0 && check_func(this->content))
+            vec.push_back(this);
+        return vec;
+    }
+    for (auto elem : this->p_children) {
+        std::vector<us3::Element*> n_vec;
+        int n_limit = limit <= 0 ? 0 : std::max(1, limit - int(vec.size()));
+        if (recursive || elem->type == NavigableString)
+            n_vec = elem->find_all_s(check_func, recursive, n_limit);
+        for (auto n_elem : n_vec)
+            if (limit <= 0 || vec.size() < limit)
+                vec.push_back(n_elem);
+        if (limit > 0 && vec.size() >= limit)
+            break;
+    }
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const std::set<us3::String>& check_set,
+        bool recursive = true,
+        int limit = 0)
+{
+    auto check_func = [&check_set](const us3::String& str) {
+        for (auto pattern : check_set) {
+            if (str.startswith("[regex]:")) {
+                // TODO: No regex matcher implemented
+            } else {
+                if (str.find(pattern) != -1)
+                    return true;
+            }
+        }
+        return false;
+    };
+    return this->find_all_s(check_func, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const std::vector<us3::String>& check_list,
+        bool recursive = true,
+        int limit = 0)
+{
+    std::set<us3::String> st;
+    for (auto str : check_list)
+        st.insert(str);
+    return this->find_all_s(st, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const us3::String& check_str,
+        bool recursive = true,
+        int limit = 0)
+{
+    std::set<us3::String> st;
+    st.insert(check_str);
+    return this->find_all_s(st, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        bool check_filter,
+        bool recursive = true,
+        int limit = 0)
+{
+    auto check_func = [check_filter](const us3::String& str) {
+        return check_filter;
+    };
+    return this->find_all_s(check_func, recursive, limit);
+}
+
 bool us3::ElementParser::get_string(
         int& pos,
         us3::String& result)
@@ -1820,48 +1896,13 @@ us3::Element* us3::UnprettySoup(std::istream& fin)
 using namespace std;
 using namespace us3;
 
-void pstring(String s)
-{
-    s = s.replace("\n", "");
-    int i = 0;
-    while (i < s.length()) {
-        cout << "    " << s.substr(i, i + 79) << "\n";
-        i += 80;
-    }
-    return ;
-}
-
-void dfs(Element* e)
-{
-    if (e->type == Tag) {
-        cout << "<class us3.Tag '" << e->name << "'>\n";
-    } else if (e->type == Doctype) {
-        cout << "<class us3.Doctype>\n";
-        pstring(e->content);
-    } else if (e->type == NavigableString) {
-        cout << "<class us3.NavigableString'>:\n";
-        pstring(e->content);
-    } else if (e->type == Comment) {
-        cout << "<class us3.Comment>\n";
-        pstring(e->content);
-    }
-    for (auto p : e->p_attrs) {
-        cout << "    " << p.first << " = " << p.second << "\n";
-    }
-    for (auto q : e->p_children)
-        dfs(q);
-    if (e->type == Tag)
-        cout << "<end of us3.Tag '" << e->name << "'>\n";
-    return ;
-}
-
 int main()
 {
     ifstream fin("juruo.html");
-    auto elem = UnprettySoup(fin);
-    // dfs(elem);
-    for (auto i : elem->strings()) {
-        cout << i->content.repr() << endl;
+    auto soup = UnprettySoup(fin);
+    auto lst = soup->find_all_s(String("swt"));
+    for (auto elem : lst) {
+        cout << elem->content.repr() << "*\n";
     }
     return 0;
 }

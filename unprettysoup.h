@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include <functional>
 #include <vector>
 #include <set>
 #include <map>
@@ -191,6 +192,16 @@ namespace us3
         std::vector<Element*> next_siblings(int);
         std::vector<Element*> previous_siblings(int);
         // Element query functions
+        // std::vector<Element*> find_all(bool (*)(Element*),
+        //         std::map<String, String>, bool, int);
+        // String query functions
+        std::vector<Element*> find_all_s(std::function<bool(const String&)>,
+                                         bool, int);
+        std::vector<Element*> find_all_s(const std::set<String>&, bool, int);
+        std::vector<Element*> find_all_s(const std::vector<String>&, bool,
+                                         int);
+        std::vector<Element*> find_all_s(const String&, bool, int);
+        std::vector<Element*> find_all_s(bool, bool, int);
         // Element modification functions
         // Friends
         friend class ElementParser;
