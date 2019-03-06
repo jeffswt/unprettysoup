@@ -1317,6 +1317,80 @@ us3::Element::Element(void)
     return ;
 }
 
+us3::Element* us3::Element::parent(void)
+{
+    return this->p_parent;
+}
+
+std::vector<us3::Element*> us3::Element::parents(int limit = 0)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element* elem = this;
+    do {
+        elem = elem->parent();
+        vec.push_back(elem);
+    } while (elem != nullptr && (limit <= 0 || vec.size() < limit));
+    return vec;
+}
+
+us3::Element* us3::Element::next_sibling(void)
+{
+    std::vector<us3::Element*> vec = this->next_siblings(1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::previous_sibling(void)
+{
+    std::vector<us3::Element*> vec = this->previous_siblings(1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+std::vector<us3::Element*> us3::Element::next_siblings(int limit = 0)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element *par = this->parent();
+    if (par == nullptr)
+        return vec;
+    bool do_push = false;
+    for (int i = 0; i < par->p_descendants.size(); i++) {
+        if (par->p_descendants[i] == this) {
+            do_push = true;
+        } else if (do_push) {
+            us3::Element *cur = par->p_descendants[i];
+            if (cur->type != NavigableString || cur->p_content.length() > 0)
+                vec.push_back(cur);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element *par = this->parent();
+    if (par == nullptr)
+        return vec;
+    bool do_push = false;
+    for (int i = par->p_descendants.size() - 1; i >= 0; i--) {
+        if (par->p_descendants[i] == this) {
+            do_push = true;
+        } else if (do_push) {
+            us3::Element *cur = par->p_descendants[i];
+            if (cur->type != NavigableString || cur->p_content.length() > 0)
+                vec.push_back(cur);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
+    return vec;
+}
+
 bool us3::ElementParser::get_string(
         int& pos,
         us3::String& result)
@@ -1378,7 +1452,7 @@ bool us3::ElementParser::get_doctype(
         return false;
     }
     result = new us3::Element();
-    result->p_type = Doctype;
+    result->type = Doctype;
     result->p_content = page.substr(pos + 9, npos - 1).strip();
     pos = npos + 1;
     return true;
@@ -1389,7 +1463,7 @@ bool us3::ElementParser::get_tag(
         us3::Element*& result)
 {
     result = new us3::Element();
-    result->p_type = Tag;
+    result->type = Tag;
     // Open tag
     bool self_closed = false;
     if (!this->get_tag_open(pos, result, self_closed)) {
@@ -1411,7 +1485,7 @@ bool us3::ElementParser::get_tag(
         this->get_string(pos, str);
         // Insert NavigableString element
         us3::Element *s_elem = new us3::Element();
-        s_elem->p_type = NavigableString;
+        s_elem->type = NavigableString;
         s_elem->p_content = str;
         s_elem->p_parent = result;
         result->p_descendants.push_back(s_elem);
@@ -1570,7 +1644,7 @@ bool us3::ElementParser::get_tag_raw(
     }
     // Create new NavigableString element to insert into
     us3::Element *cont = new us3::Element();
-    cont->p_type = NavigableString;
+    cont->type = NavigableString;
     cont->p_content = page.substr(pos, npos - 1);
     cont->p_parent = result;
     result->p_descendants.push_back(cont);
@@ -1601,7 +1675,7 @@ bool us3::ElementParser::get_comment(
     pos = page.find_first_not_of("-", pos + 4);
     int npos = page.find("-->", pos);
     result = new us3::Element();
-    result->p_type = Comment;
+    result->type = Comment;
     if (npos == -1) {
         result->p_content = page.substr(pos, page.length() - 1).strip();
         pos = page.length();
@@ -1620,7 +1694,7 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     us3::Element *dom = new us3::Element();
     us3::String buffer;
     int pos = 0;
-    dom->p_type = Tag;
+    dom->type = Tag;
     dom->name = "[document]";
     // Parse Doctype first, if there is any
     us3::Element *doctype;
@@ -1674,15 +1748,15 @@ void pstring(String s)
 
 void dfs(Element* e)
 {
-    if (e->p_type == Tag) {
+    if (e->type == Tag) {
         cout << "<class us3.Tag '" << e->name << "'>\n";
-    } else if (e->p_type == Doctype) {
+    } else if (e->type == Doctype) {
         cout << "<class us3.Doctype>\n";
         pstring(e->p_content);
-    } else if (e->p_type == NavigableString) {
+    } else if (e->type == NavigableString) {
         cout << "<class us3.NavigableString'>:\n";
         pstring(e->p_content);
-    } else if (e->p_type == Comment) {
+    } else if (e->type == Comment) {
         cout << "<class us3.Comment>\n";
         pstring(e->p_content);
     }
@@ -1691,7 +1765,7 @@ void dfs(Element* e)
     }
     for (auto q : e->p_descendants)
         dfs(q);
-    if (e->p_type == Tag)
+    if (e->type == Tag)
         cout << "<end of us3.Tag '" << e->name << "'>\n";
     return ;
 }

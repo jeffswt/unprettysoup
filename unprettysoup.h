@@ -161,13 +161,13 @@ namespace us3
     protected:
     public:
         // Data
-        ElementType p_type;  // Element type
         String p_content;  // Contents [Doctype, NavigableString, Comment]
         std::map<String, String> p_attrs;  // Element attributes [Tag]
         // Relations
         Element* p_parent;
         std::vector<Element*> p_descendants;
     public:
+        ElementType type;  // Element type
         String name;  // Element name [Tag]
         // Initializers
         Element(void);
@@ -176,6 +176,13 @@ namespace us3
         // bool attrs_has(const String&);
         // String attrs_get(const String&) const;
         // void attrs_set(const String&, const String&);
+        // Traversal functions
+        Element* parent(void);
+        std::vector<Element*> parents(int);
+        Element* next_sibling(void);
+        Element* previous_sibling(void);
+        std::vector<Element*> next_siblings(int);
+        std::vector<Element*> previous_siblings(int);
         // Element query functions
         // Element modification functions
         // Friends
