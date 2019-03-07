@@ -161,9 +161,6 @@ namespace us3
     class Element
     {
     protected:
-    public:
-        // Data
-        std::map<String, String> p_attrs;  // Element attributes [Tag]
         // Relations
         Element* p_parent;
         std::vector<Element*> p_children;
@@ -171,13 +168,14 @@ namespace us3
         ElementType type;  // Element type
         String name;  // Element name [Tag]
         String content;  // String content [Doctype, NavigableString, Comment]
+        std::map<String, String> attrs;  // Element attributes [Tag]
         // Initializers
         Element(void);
         // Data access functions
-        // String& operator [] (const String&) const;
-        // bool attrs_has(const String&);
-        // String attrs_get(const String&) const;
-        // void attrs_set(const String&, const String&);
+        bool has_attr(const String&);
+        String get_attr(const String&);
+        void set_attr(const String&, const String&);
+        void del_attr(const String&);
         // Traversal functions
         std::vector<Element*> contents(bool);
         std::vector<Element*> children(bool);

@@ -1323,6 +1323,28 @@ us3::Element::Element(void)
     return ;
 }
 
+bool us3::Element::has_attr(const us3::String& str)
+{
+    return this->attrs.find(str) != this->attrs.end();
+}
+
+us3::String us3::Element::get_attr(const us3::String& str)
+{
+    return this->attrs[str];
+}
+
+void us3::Element::set_attr(const us3::String& str, const us3::String& val)
+{
+    this->attrs[str] = val;
+    return ;
+}
+
+void us3::Element::del_attr(const us3::String& str)
+{
+    this->attrs.erase(str);
+    return ;
+}
+
 std::vector<us3::Element*> us3::Element::contents(
         bool show_empty_strings = false)
 {
@@ -1505,11 +1527,11 @@ void us3::Element::find_all(
     // Checking according to attributes
     if (can_push) {
         for (auto attr : attrs) {
-            if (this->p_attrs.find(attr.first) == this->p_attrs.end())
+            if (this->attrs.find(attr.first) == this->attrs.end())
                 can_push = false;
             // Classes should be treated differently
             if (attr.first == "class") {
-                auto v_s = this->p_attrs[attr.first].split(" "),
+                auto v_s = this->attrs[attr.first].split(" "),
                      v_p = attr.second.split(" ");
                 // O(log n) query and deduplication
                 std::set<us3::String> s_s;
@@ -1525,7 +1547,7 @@ void us3::Element::find_all(
                     }
                 }
             } else {
-                if (this->p_attrs[attr.first] != attr.second)
+                if (this->attrs[attr.first] != attr.second)
                     can_push = false;
             }
             if (!can_push)
@@ -1932,7 +1954,7 @@ bool us3::ElementParser::get_tag_open(
             }
         }
         // Inject attribute
-        result->p_attrs[attr_name] = attr_value;
+        result->attrs[attr_name] = attr_value;
     }
     // TODO
     return true;
