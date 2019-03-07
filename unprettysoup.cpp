@@ -1607,6 +1607,61 @@ std::vector<us3::Element*> us3::Element::find_all(
     return this->find_all(check_func, attrs, recursive, limit);
 }
 
+us3::Element* us3::Element::find(
+        std::function<bool(Element*)> tag_check_func,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all(tag_check_func, attrs,
+                                                    recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const std::set<us3::String>& tags,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const std::vector<us3::String>& tags,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const us3::String& tag,
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all(tag, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        std::map<String, String> attrs = std::map<String, String>(),
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all(attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
 void us3::Element::find_all_s(
         std::vector<us3::Element*>& vec,
         std::function<bool(const us3::String&)> check_func,
@@ -2024,5 +2079,6 @@ int main()
     for (auto elem : lst) {
         cout << elem->name.repr() << "\n";
     }
+    cout << soup->find()->name.repr() << "\n";
     return 0;
 }

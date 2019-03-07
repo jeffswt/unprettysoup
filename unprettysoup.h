@@ -205,6 +205,13 @@ namespace us3
         std::vector<Element*> find_all(const String&,
                                        std::map<String, String>, bool, int);
         std::vector<Element*> find_all(std::map<String, String>, bool, int);
+        Element* find(std::function<bool(Element*)>, std::map<String, String>,
+                      bool);
+        Element* find(const std::set<String>&, std::map<String, String>, bool);
+        Element* find(const std::vector<String>&, std::map<String, String>,
+                      bool);
+        Element* find(const String&, std::map<String, String>, bool);
+        Element* find(std::map<String, String>, bool);
         // String query functions
         void find_all_s(std::vector<Element*>&,
                         std::function<bool(const String&)>, bool, int);
