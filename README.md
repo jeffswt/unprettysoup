@@ -417,7 +417,7 @@ soup->find_all("b");
 
 #### A list
 
-If you pass in a list, Beautiful Soup will allow a string match against any item in that list. This code finds all the `<a>` tags and all the `<b>` tags:
+If you pass in a list, Unpretty Soup will allow a string match against any item in that list. This code finds all the `<a>` tags and all the `<b>` tags:
 
 ```C++
 vector<String> vec;
@@ -428,6 +428,18 @@ soup->find_all(vec);
 //  <a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>,
 //  <a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>,
 //  <a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>]
+```
+
+#### A set
+
+If you pass in a set, Unpretty Soup will allow a string match against any item in that set. This code functions the same as the previous example:
+
+```C++
+set<String> st;
+st.insert("a");
+st.insert("b");
+soup->find_all(st);
+// Result all the same as previous
 ```
 
 #### True
@@ -513,7 +525,7 @@ soup->find_all("title");
 // [<title>The Juruo's story</title>]
 ```
 
-Recall from Kinds of filters that the value to `name` can be a string, a list, a function or nothing at all.
+Recall from Kinds of filters that the value to `name` can be a string, a list, a set, a function or nothing at all.
 
 ##### The `attrs` / keywords argument
 
@@ -652,6 +664,41 @@ If `.find_all()` can't find anything, it returns an empty list. If `.find()` can
 soup->find("nosuchtag");
 // nullptr
 ```
+
+#### .find_all_s()
+
+Definition: find_all_s(pattern, recursive, limit)
+
+The `.find_all()` method scans the entire document for tags, but sometimes you want to search for strings. It's a waste of time iterating the whole `.descendants()` just to find something, so there's a simple approach for this task.
+
+Recall from Kinds of filters, and similar to it, the value to `pattern` can be a string, a list, a set or a function. Different from it, the `pattern` functions in a way that matches a substring of the current `NavigableString`, instead of comparing to it. That is, with a `pattern="a"`, the main string `"ab"` would be considered as a match.
+
+You may pass a function into `.find_all_s()`, only with different parameters (It should still return `true` for strings that it wish to keep and vice versa):
+
+```C++
+#include <functional>
+auto length_longer_than_zero = [](String str) {
+    return str.length() > 0;
+};
+```
+
+The other parameters (`recursive` and `limit`) functions the way as `.find_all()` does.
+
+#### .find_s()
+
+Definition: find_s(pattern, recursive)
+
+The relationship between `.find_s()` and `.find_all_s()` is the same as that between `.find()` and `.find_all()`. Rather than passing in `limit=1` every time you call `.find_all_s()`, you can use the `.find_s()` method. These two lines of code are nearly equivalent:
+
+```C++
+soup->find_all_s("Juruo", true, 1);
+// ["The Juruo's story"]
+
+soup->find_s("Juruo");
+// "The Juruo's story"
+```
+
+They differ in a similar manner to `.find()` and `.find_all()`. For details, consult the previous section.
 
 ## Modifying the tree
 

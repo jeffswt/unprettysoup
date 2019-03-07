@@ -1749,6 +1749,46 @@ std::vector<us3::Element*> us3::Element::find_all_s(
     return this->find_all_s(st, recursive, limit);
 }
 
+us3::Element* us3::Element::find_s(
+        std::function<bool(const us3::String&)> ch_func,
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(ch_func, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const std::set<us3::String>& str_set,
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str_set, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const std::vector<us3::String>& str_vec,
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str_vec, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const us3::String& str,
+        bool recursive = true)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
 bool us3::ElementParser::get_string(
         int& pos,
         us3::String& result)
@@ -2100,9 +2140,5 @@ int main()
 {
     ifstream fin("juruo.html");
     auto soup = UnprettySoup(fin);
-    auto lst = soup->descendants();
-    for (auto elem : lst) {
-        cout << elem->name.repr() << " " << elem->content.repr() << "\n";
-    }
     return 0;
 }

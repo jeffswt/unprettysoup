@@ -219,6 +219,10 @@ namespace us3
         std::vector<Element*> find_all_s(const std::vector<String>&, bool,
                                          int);
         std::vector<Element*> find_all_s(const String&, bool, int);
+        Element* find_s(std::function<bool(const String&)>, bool);
+        Element* find_s(const std::set<String>&, bool);
+        Element* find_s(const std::vector<String>&, bool);
+        Element* find_s(const String&, bool);
         // Element modification functions
         // Friends
         friend class ElementParser;
