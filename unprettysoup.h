@@ -170,8 +170,9 @@ namespace us3
         String name;  // Element name [Tag]
         String content;  // String content [Doctype, NavigableString, Comment]
         std::map<String, String> attrs;  // Element attributes [Tag]
-        // Initializers
+        // Initializers, destructors
         Element(void);
+        ~Element(void);
         // Data access functions
         bool has_attr(const String&);
         String get_attr(const String&);

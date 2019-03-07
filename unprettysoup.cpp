@@ -1330,6 +1330,16 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 
 us3::Element::Element(void)
 {
+    this->p_parent = nullptr;
+    this->p_children.clear();
+    return ;
+}
+
+us3::Element::~Element(void)
+{
+    for (auto elem : this->p_children)
+        if (elem != nullptr)
+            delete elem;
     return ;
 }
 
@@ -2294,5 +2304,6 @@ int main()
     ifstream fin("juruo.html");
     auto soup = UnprettySoup(fin);
     cout << soup->find("title") << endl;
+    delete soup;
     return 0;
 }
