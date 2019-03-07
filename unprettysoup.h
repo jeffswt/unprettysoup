@@ -26,6 +26,7 @@ namespace us3
         // Initializers
         Char(void);
         Char(char);
+        Char(int);
         Char(unsigned int);
         Char(std::string);
         Char(std::string, int&);

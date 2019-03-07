@@ -512,8 +512,18 @@ us3::Char::Char(char value)
     return ;
 }
 
+us3::Char::Char(int value)
+{
+    if (value > 0x10ffff || value < 0x00)
+        value = 0x00;
+    this->value = value;
+    return ;
+}
+
 us3::Char::Char(unsigned int value)
 {
+    if (value > 0x10ffff)
+        value = 0x00;
     this->value = value;
     return ;
 }

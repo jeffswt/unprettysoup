@@ -42,11 +42,63 @@ and they always fail exams.</p>
 
 ## Kinds of objects
 
+To ensure proper Unicode support under C++ (which doesn't have a lite solution for Unicode support, and doesn't have native support either), Unpretty Soup defined a series of convenient types to handle Unicode data in an easier way, and functions similarly to Python.
+
 ### Char
+
+A `Char` is effectively an alias of `unsigned int`, and takes the same amount of memory. It consumes 4 times more memory than a typical single-width `char`, which only has 8 bits (and `Char` consumes 32 bits).
+
+#### Converting between Unicode and raw
+
+You can convert a STL string into a Char object, and acknowledge how many bytes have been parsed, like this:
+
+```C++
+std::string unicode_str = "苟利...";
+cout << unicode_str.length() << endl;  // 9
+int pos = 0;
+us3::Char chr(unicode_str, pos);
+cout << "Consumed " << pos - 0 << " bytes\n";  // Consumed 3 bytes
+```
+
+Which is equivalent to:
+
+```C++
+chr.from_string(unicode_str, pos);
+```
+
+And you can have multiple ways to display it or convert it back to raw data:
+
+```C++
+std::string chr_raw = chr.to_string();
+cout << chr_raw << endl;  // 苟
+cout << chr << endl;  // 苟
+```
+
+#### Initialize from values
+
+`Char` object also accepts initialization with values, namely `char` and `unsigned int`. Note that you should only pass values within `0x00` and `0x10ffff` in. It should write like this:
+
+```C++
+us3::Char c1 = '#',
+          c2 = 97,  // 'a'
+		 c3 = (unsigned int)(0x5229);  // '利'
+```
+
+#### Comparing and calculating
+
+The `Char` object supports all 6 comparative operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) and 4 manipulative operators (`+`, `+=`, `-`, `-=`).
+
+#### Determining type
+
+Please refer to the same section in `String` objects.
 
 ### String
 
+...
+
 ### Element
+
+...
 
 ## Navigating the tree
 
@@ -245,7 +297,7 @@ Continuing the "family tree" analogy, every tag and every string has a *parent*:
 
 #### .parent()
 
-You can access an element's parent with the `.parent()` method. In the example "three sisters" document, the `<head>` tag is the parent of the `<title>` tag:
+You can access an element's parent with the `.parent()` method. In the example "three juruo" document, the `<head>` tag is the parent of the `<title>` tag:
 
 ```C++
 auto title_tag = soup->find("title");
@@ -360,7 +412,7 @@ You might think that the `.next_sibling()` of the first `<a>` tag would be the s
 
 ```C++
 auto link = soup->find("a");
-// <a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>
+// <a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>
 link->next_sibling();
 // ",\n"
 ```
@@ -369,7 +421,7 @@ The second `<a>` tag is actually the `.next_sibling()` of the comma:
 
 ```C++
 link->next_sibling()->next_sibling();
-// <a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>
+// <a class="juruo" href="http://example.com/swt" id="link2">swt</a>
 ```
 
 #### .next_siblings() and .previous_siblings()
@@ -424,10 +476,10 @@ vector<String> vec;
 vec.push_back("a");
 vec.push_back("b");
 soup->find_all(vec);
-// [<b>The Dormouse's story</b>,
-//  <a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>,
-//  <a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>,
-//  <a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>]
+// [<b>The Juruo's story</b>,
+//  <a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>,
+//  <a class="juruo" href="http://example.com/swt" id="link2">swt</a>,
+//  <a class="juruo" href="http://example.com/juruoswt" id="link3">juruoswt</a>]
 ```
 
 #### A set
@@ -499,7 +551,7 @@ soup->find_all("title");
 map<String, String> mp;
 mp["class"] = "title";
 soup->find_all("p", mp);
-// [<p class="title"><b>The Dormouse's story</b></p>]
+// [<p class="title"><b>The Juruo's story</b></p>]
 
 soup->find_all("a");
 // [<a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>,
@@ -516,7 +568,7 @@ Some of these should look familiar, but others are new. You may not understand a
 
 ##### The `name` argument
 
-Pass in a value for `name` and you'll tell Beautiful Soup to only consider tags with certain names. Text strings will be ignored, as will tags whose names that don't match.
+Pass in a value for `name` and you'll tell Unpretty Soup to only consider tags with certain names. Text strings will be ignored, as will tags whose names that don't match.
 
 This is the simplest usage:
 
