@@ -81,7 +81,7 @@ soup->find("a");
 // <a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>
 ```
 
-If you need to get all the `<a>` tags, or anything more complicated than the first tag with a certain name, you'll need to use one of the methods described in [Searching the tree](), such as `.find_all()`:
+If you need to get all the `<a>` tags, or anything more complicated than the first tag with a certain name, you'll need to use one of the methods described in Searching the tree, such as `.find_all()`:
 
 ```C++
 soup->find_all("a");
@@ -398,13 +398,13 @@ for (auto sibling : soup->find("a")->next_siblings())
 
 ## Searching the tree
 
-Unpretty Soup defines a lot of methods for searching the parse tree, but they're all very similar. I’m going to spend a lot of time explaining the two most popular methods: `.find()`and `.find_all()`. The other methods (which are available in Beautiful Soup) take almost exactly the same arguments, but as they don't exist I won't cover them.
+Unpretty Soup defines a lot of methods for searching the parse tree, but they're all very similar. I'm going to spend a lot of time explaining the two most popular methods: `.find()`and `.find_all()`. The other methods (which are available in Beautiful Soup) take almost exactly the same arguments, but as they don't exist I won't cover them.
 
-Once again, I’ll be using the “three juruos” document as an example.
+Once again, I'll be using the "three juruos" document as an example.
 
 ### Kinds of filters
 
-Before talking in detail about `.find_all()` and similar methods, I want to show examples of different filters you can pass into these methods. These filters show up again and again, throughout the search API. You can use them to filter based on a tag’s name, on its attributes, on the text of a string, or on some combination of these.
+Before talking in detail about `.find_all()` and similar methods, I want to show examples of different filters you can pass into these methods. These filters show up again and again, throughout the search API. You can use them to filter based on a tag's name, on its attributes, on the text of a string, or on some combination of these.
 
 #### A string
 
@@ -448,7 +448,7 @@ for (auto tag : soup->find_all())
 
 If none of the other matches work for you, define a function that takes an element as its only argument. The function should return `true` if the argument matches, and `false`otherwise.
 
-Here’s a function that returns `true` if a tag defines the “class” attribute but doesn’t define the “id” attribute:
+Here's a function that returns `true` if a tag defines the "class" attribute but doesn't define the "id" attribute:
 
 ```C++
 #include <functional>
@@ -457,7 +457,7 @@ auto has_class_but_no_id = [](Element* tag) {
 };
 ```
 
-Pass this function into `.find_all()` and you’ll pick up all the `<p>` tags:
+Pass this function into `.find_all()` and you'll pick up all the `<p>` tags:
 
 ```C++
 soup->find_all(has_class_but_no_id);
@@ -466,11 +466,11 @@ soup->find_all(has_class_but_no_id);
 //  <p class="story">...</p>]
 ```
 
-This function only picks up the `<p>` tags. It doesn’t pick up the `<a>` tags, because those tags define both “class” and “id”. It doesn’t pick up tags like `<html>` and `<title>`, because those tags don’t define “class”.
+This function only picks up the `<p>` tags. It doesn't pick up the `<a>` tags, because those tags define both "class" and "id". It doesn't pick up tags like `<html>` and `<title>`, because those tags don't define "class".
 
 The function can be as complicated as you need it to be.
 
-Now we’re ready to look at the search methods in detail.
+Now we're ready to look at the search methods in detail.
 
 ### Methods
 
@@ -478,7 +478,7 @@ Now we’re ready to look at the search methods in detail.
 
 Definition: find_all(name, attrs, recursive, limit)
 
-The `.find_all()` method looks through a tag’s descendants and retrieves all descendants that match your filters. I gave several examples in Kinds of filters, but here are a few more:
+The `.find_all()` method looks through a tag's descendants and retrieves all descendants that match your filters. I gave several examples in Kinds of filters, but here are a few more:
 
 ```C++
 soup->find_all("title");
@@ -500,11 +500,11 @@ soup->find_all(mp);
 // [<a class="juruo" href="http://example.com/swt" id="link2">swt</a>]
 ```
 
-Some of these should look familiar, but others are new. You may not understand all of them, so let’s look at the arguments to `find_all()`.
+Some of these should look familiar, but others are new. You may not understand all of them, so let's look at the arguments to `find_all()`.
 
 ##### The `name` argument
 
-Pass in a value for `name` and you’ll tell Beautiful Soup to only consider tags with certain names. Text strings will be ignored, as will tags whose names that don’t match.
+Pass in a value for `name` and you'll tell Beautiful Soup to only consider tags with certain names. Text strings will be ignored, as will tags whose names that don't match.
 
 This is the simplest usage:
 
@@ -515,17 +515,161 @@ soup->find_all("title");
 
 Recall from Kinds of filters that the value to `name` can be a string, a list, a function or nothing at all.
 
+##### The `attrs` / keywords argument
+
+You can filter tags by putting rules into a `map<String, String>` object. If you pass in a value for a rule describing limitations on `id`, Unpretty Soup will filter against each tag's 'id' attribute.
+
+```C++
+map<String, String> mp;
+mp["id"] = "link2";
+soup->find_all(mp);
+// [<a class="juruo" href="http://example.com/swt" id="link2">swt</a>]
+```
+
+You can filter an attribute based on strings.
+
+You can filter multiple attributes at once by passing in more than one keyword argument:
+
+```C++
+mp.clear();
+mp["id"] = "link1";
+mp["a"] = "http://example.com/jeffswt";
+soup->find_all(mp);
+// [<a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>]
+```
+
+Some attributes, like the `data-*` attributes in HTML 5, have names that can't be used as the names of keyword arguments. Unlike Beautiful Soup that can take in keyword arguments, Unpretty Soup takes only `map` objects, so that doesn't pose a problem.
+
+```C++
+auto data_soup = UnprettySoup("<div data-foo=\"value\">foo!</div>");
+mp.clear();
+mp["data-foo"] = "value";
+data_soup->find_all(mp);
+// [<div data-foo="value">foo!</div>]
+```
+
+##### Searching by CSS class
+
+It's very useful to search for a tag that has a certain CSS class. You can search by CSS class using the keyword argument `class`, and pass it into the `attr` parameter:
+
+```C++
+map<String, String> mp;
+mp["class"] = "juruo";
+soup->find_all("a", mp);
+// [<a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>,
+//  <a class="juruo" href="http://example.com/swt" id="link2">swt</a>,
+//  <a class="juruo" href="http://example.com/juruoswt" id="link3">juruoswt</a>]
+```
+
+Remember that a single tag can have multiple values for its "class" attribute. When you search for a tag that matches a certain CSS class, you're matching against any of its CSS classes:
+
+```C++
+auto css_soup = UnprettySoup("<p class=\"body strikeout\"></p>");
+mp.clear();
+mp["class"] = "strikeout";
+css_soup->find_all("p", mp);
+// [<p class="body strikeout"></p>]
+
+mp["class"] = "body";
+css_soup->find_all("p", mp);
+// [<p class="body strikeout"></p>]
+```
+
+You can also search for the exact string value of the `class` attribute:
+
+```C++
+mp["class"] = "body strikeout";
+css_soup->find_all("p", mp);
+// [<p class="body strikeout"></p>]
+```
+
+Unlike Beautiful Soup (which returns `[]` in the following example), searching for variants of the string value will also work. Thus you can search for tags that match two or more CSS classes, without requirements of order:
+
+```C++
+mp["class"] = "strikeout body";
+css_soup->find_all("p", mp);
+// [<p class="body strikeout"></p>]
+```
+
+##### The `recursive` argument
+
+If you call `mytag->find_all()`, Unpretty Soup will examine all the descendants of `mytag`: its children, its children's children, and so on. If you only want to consider direct children, you can pass in `recursive=False`. See the difference here:
+
+```C++
+soup->find("html")->find_all("title");
+// [<title>The Juruo's story</title>]
+
+soup->find("html")->find_all("title", false);
+// []
+```
+
+Here's that part of the document:
+
+```HTML
+<html>
+ <head>
+  <title>
+   The Juruo's story
+  </title>
+ </head>
+...
+```
+
+The `<title>` tag is beneath the `<html>` tag, but it's not directly beneath the `<html>` tag: the `<head>` tag is in the way. Unpretty Soup finds the `<title>` tag when it's allowed to look at all descendants of the `<html>` tag, but when `recursive=False` restricts it to the `<html>` tag's immediate children, it finds nothing.
+
+##### The `limit` argument
+
+`.find_all()` returns all the tags and strings that match your filters. This can take a while if the document is large. If you don't need all the results, you can pass in a number for `limit`. This works just like the LIMIT keyword in SQL. It tells Unpretty Soup to stop gathering results after it's found a certain number.
+
+There are three links in the "three juruos" document, but this code only finds the first two:
+
+```C++
+soup->find_all("a", map<String, String>(), true, 2);
+// attrs = {}, recursive = true, limit = 2
+// [<a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>,
+//  <a class="juruo" href="http://example.com/swt" id="link2">swt</a>]
+```
+
+#### .find()
+
+Definition: find(name, attrs, recursive);
+
+The `.find_all()` method scans the entire document looking for results, but sometimes you only want to find one result. If you know a document only has one `<body>` tag, it's a waste of time to scan the entire document looking for more. Rather than passing in `limit=1` every time you call `.find_all()`, you can use the `.find()` method. These two lines of code are nearly equivalent:
+
+```C++
+soup->find_all("title", map<String, String>(), true, 1);
+// [<title>The Juruo's story</title>]
+
+soup->find("title");
+// <title>The Juruo's story</title>
+```
+
+The only difference is that `.find_all()` returns a list containing the single result, and `.find()` just returns the result.
+
+If `.find_all()` can't find anything, it returns an empty list. If `.find()` can't find anything, it returns `nullptr`:
+
+```C++
+soup->find("nosuchtag");
+// nullptr
+```
+
 ## Modifying the tree
 
 As this project is initially intended for crawling webpages, tree modification methods are not currently available.
 
 ## Output
 
+...
+
 ## Encodings
 
 You should preferrably and only use UTF-8 as your encoding.
 
 If your document is not, convert it to UTF-8 before you use.
+
+## Troubleshooting
+
+## Contribution
 
 ## License
 
