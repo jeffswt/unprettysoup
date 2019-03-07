@@ -988,7 +988,61 @@ As this project is initially intended for crawling webpages, tree modification m
 
 ## Output
 
-...
+### Pretty printing
+
+In the "three juruos" example above, we can print the document in a well-formatted string, with a separate line for each HTML tag and string. You can call `.prettify()` on any `Tag` object:
+
+```C++
+cout << soup->prettify() << endl;
+```
+
+Yields:
+
+```HTML
+<html>
+ <head>
+  <title>
+   The Juruo's story
+  </title>
+ </head>
+ <body>
+  <p abc="abcdefg hij" class="title untest">
+   <b>
+    The Juruo's story
+   </b>
+  </p>
+  <p class="story">
+   Once upon a time there were three little juruos; and there names were
+   <a class="juruo" href="http://example.com/jeffswt" id="link1">
+    jeffswt
+   </a>
+   ,
+   <a class="juruo" href="http://example.com/swt" id="link2">
+    swt
+   </a>
+   and
+   <a class="juruo" href="http://example.com/juruoswt" id="link3">
+    juruoswt
+   </a>
+   ; and they always fail exams.
+  </p>
+  <p class="story">
+   ...
+  </p>
+ </body>
+</html>
+```
+
+### Non-pretty printing
+
+If you just want a string, with no fancy formatting (but with Unicode!), you can call `.to_string()` on a `Tag` object, or simply print it:
+
+```C++
+cout << soup->to_string() << endl;
+cout << soup << endl;
+```
+
+Both of the above functions yield the same result as the original document, apart from some tag attribute position swaps.
 
 ## Encodings
 

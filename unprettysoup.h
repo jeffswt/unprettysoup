@@ -225,7 +225,14 @@ namespace us3
         Element* find_s(const std::vector<String>&, bool);
         Element* find_s(const String&, bool);
         // Element modification functions
+        // Output functions
+        void to_string(String&);
+        String to_string(void);
+        void prettify(String&, int, int);
+        String prettify(int);
+        
         // Friends
+        friend std::ostream& operator << (std::ostream&, Element);
         friend class ElementParser;
     };
 
@@ -245,6 +252,9 @@ namespace us3
         Element* parse(const String&);
         friend Element* UnprettySoup(const String&);
     };  // You should not use this
+
+    std::ostream& operator << (std::ostream&, ElementType);
+    std::ostream& operator << (std::ostream&, Element*);
 
     Element* UnprettySoup(const String&);
     Element* UnprettySoup(std::istream&);

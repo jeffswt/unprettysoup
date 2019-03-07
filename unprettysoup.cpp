@@ -1799,6 +1799,128 @@ us3::Element* us3::Element::find_s(
     return vec[0];
 }
 
+void us3::Element::to_string(us3::String& buffer)
+{
+    if (this->type == NavigableString) {
+        buffer += this->content;
+    } else if (this->type == Doctype) {
+        buffer += "<!DOCTYPE ";
+        buffer += this->content;
+        buffer += ">\n";
+    } else if (this->type == Comment) {
+        buffer += "<!-- ";
+        buffer += this->content;
+        buffer += " -->";
+    } else if (this->type == Tag) {
+        bool is_void_tag = false;
+        if (chardet_table.sp_name_void.find(this->name) != chardet_table.
+                sp_name_void.end())
+            is_void_tag = true;
+        if (this->p_parent != nullptr) {
+            buffer += "<";
+            buffer += this->name;
+            for (auto attr : this->attrs) {
+                buffer += " ";
+                buffer += attr.first;
+                if (attr.second.length() > 0) {
+                    bool d_quot = attr.second.find_first_of("\"") == -1;
+                    buffer += d_quot ? "=\"" : "=\'";
+                    buffer += attr.second;
+                    buffer += d_quot ? "\"" : "\'";
+                }
+            }
+            if (!is_void_tag) {
+                buffer += ">";
+                for (auto elem : this->p_children)
+                    elem->to_string(buffer);
+                buffer += "</";
+                buffer += this->name;
+                buffer += ">";
+            } else {
+                buffer += " />";
+            }
+        } else {
+            for (auto elem : this->p_children)
+                elem->to_string(buffer);
+        }
+    }
+    return ;
+}
+
+us3::String us3::Element::to_string(void)
+{
+    us3::String buffer;
+    this->to_string(buffer);
+    return buffer;
+}
+
+void us3::Element::prettify(us3::String& buffer, int offset, int indent)
+{
+    us3::String ofs_s = us3::String(" ") * offset;
+    if (this->type == NavigableString) {
+        us3::String tmp = this->content.replace("\n", " ").strip();
+        if (tmp.length() == 0)
+            return ;
+        buffer += ofs_s;
+        buffer += tmp;
+        buffer += "\n";
+        return ;
+    } else if (this->type == Doctype) {
+        buffer += ofs_s;
+        buffer += "<!DOCTYPE ";
+        buffer += this->content.replace("\n", " ").strip();
+        buffer += ">\n";
+        return ;
+    } else if (this->type == Comment) {
+        buffer += ofs_s;
+        buffer += "<!-- ";
+        buffer += this->content.replace("\n", " ");
+        buffer += " -->\n";
+    } else if (this->type == Tag) {
+        bool is_void_tag = false;
+        if (chardet_table.sp_name_void.find(this->name) != chardet_table.
+                sp_name_void.end())
+            is_void_tag = true;
+        if (this->p_parent != nullptr) {
+            buffer += ofs_s;
+            buffer += "<";
+            buffer += this->name;
+            for (auto attr : this->attrs) {
+                buffer += " ";
+                buffer += attr.first;
+                if (attr.second.length() > 0) {
+                    bool d_quot = attr.second.find_first_of("\"") == -1;
+                    buffer += d_quot ? "=\"" : "=\'";
+                    buffer += attr.second;
+                    buffer += d_quot ? "\"" : "\'";
+                }
+            }
+            if (!is_void_tag) {
+                buffer += ">\n";
+                for (auto elem : this->p_children)
+                    elem->prettify(buffer, offset + indent, indent);
+                buffer += ofs_s;
+                buffer += "</";
+                buffer += this->name;
+                buffer += ">\n";
+            } else {
+                buffer += " />\n";
+            }
+        } else {
+            for (auto elem : this->p_children)
+                elem->prettify(buffer, offset, indent);
+        }
+    }
+    return ;
+}
+
+us3::String us3::Element::prettify(int indent = 1)
+{
+    us3::String buffer;
+    this->prettify(buffer, 0, indent);
+    return buffer;
+}
+
 bool us3::ElementParser::get_string(
         int& pos,
         us3::String& result)
@@ -2127,6 +2249,27 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     return dom;
 }
 
+std::ostream& us3::operator << (std::ostream& stream, us3::ElementType typ)
+{
+    if (typ == Doctype)
+        stream << "[doctype]";
+    else if (typ == Tag)
+        stream << "[tag]";
+    else if (typ == CorruptedTag)
+        stream << "[!]";
+    else if (typ == NavigableString)
+        stream << "[string]";
+    else if (typ == Comment)
+        stream << "[comment]";
+    return stream;
+}
+
+std::ostream& us3::operator << (std::ostream& stream, us3::Element* elem)
+{
+    stream << elem->to_string();
+    return stream;
+}
+
 us3::Element* us3::UnprettySoup(const us3::String& str)
 {
     us3::ElementParser parser;
@@ -2150,5 +2293,6 @@ int main()
 {
     ifstream fin("juruo.html");
     auto soup = UnprettySoup(fin);
+    cout << soup->find("title") << endl;
     return 0;
 }
