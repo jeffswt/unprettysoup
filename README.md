@@ -1,4 +1,4 @@
-# /Unpretty Soup
+# Unpretty Soup
 
 Unpretty Soup is a C++ library for pulling data out of HTML files. It works individually with its **own Unicode (UTF-8) solution** and its **own parser**, to provide simple ways of navigating, searching, <del>and modifying</del> the parsed DOM tree. It commonly saves CS students and programmers days or weeks of work.
 
@@ -19,7 +19,7 @@ If you have questions about Unpretty Soup, or run into problems, consider the [I
 
 ## Quick Start
 
-Here's an HTML document I'll be using as an example throughout this document.
+Here's an HTML document I'll be using as an example throughout this document. It's part of a story telling how ruo jeffswt is.
 
 ```HTML
 <html><head><title>The Juruo's story</title></head>
@@ -36,9 +36,90 @@ and they always fail exams.</p>
 </body></html>
 ```
 
+Running the "three juruos" document through Unpretty Soup gives us a `Element*` pointer / object, which represents the document as a nested data structure.
+
+```C++
+#include <unprettysoup.h>
+auto soup = UnprettySoup(html_doc);
+```
+
+Here are some simple ways to navigate that data structure:
+
+```C++
+soup->find("title");
+// <title> The Juruo's story</title>
+
+soup->find("title")->name;
+// title
+
+soup->find("title")->string()->content;
+// The Juruo's story
+
+soup-->find("title")->parent()->name;
+// head
+
+soup->find("p");
+// <p class="title"><b>The Juruo's story</b></p>
+
+soup->find("p")->attrs["class"];
+// title
+
+soup->find("a");
+// <a class="juruo" href="http://example.com/jeffswt" id="link1">jeffswt</a>
+
+soup->find_all("a");
+// [<a href="http://example.com/jeffswt" class="juruo" id="link1">jeffswt</a>,
+//  <a href="http://example.com/swt" class="juruo" id="link2">swt</a>,
+//  <a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>]
+
+map<String, String> mp;
+mp["id"] = "link3";
+soup->find(mp);
+// <a href="http://example.com/juruoswt" class="juruo" id="link3">juruoswt</a>
+```
+
+One common task is extracting all the URLs found within a page's `<a>` tags:
+
+```C++
+for (auto link : soup->find_all("a"))
+    cout << link->get_attr("href") << endl;
+// http://exammple.com/jeffswt
+// http://exammple.com/swt
+// http://exammple.com/juruoswt
+```
+
 ## Installing Unpretty Soup
 
+Unpretty Soup is designed to use as fewer dependencies as possible, so it relies only on a C++11 compiler, and no other dependencies (except for STL, though).
+
+Copy `unprettysoup.cpp` and `unprettysoup.h` to your project directory or project include directory. Include the header and compile the source codes separately, then you have a pretty soup.
+
+```bash
+g++ my_code.cpp -c -o my_code.o
+g++ unprettysoup.cpp -c -o unprettysoup.o
+g++ my_code.o unprettysoup.o -o my_code.out
+./my_code.out
+```
+
+Note that you may want to ignore the `us3` namespace like this:
+
+```C++
+#include <unprettysoup.h>
+using namespace std;
+using namespace us3;
+```
+
 ## Making the soup
+
+To parse a document, pass it into the `UnprettySoup` function. You can pass in a string or an open input stream:
+
+```C++
+ifstream fin("index.html");
+auto soup = UnprettySoup(fin);
+fin.close();
+delete soup;
+soup = UnprettySoup("<html>data</html>");
+```
 
 ## Kinds of objects
 
@@ -917,7 +998,13 @@ If your document is not, convert it to UTF-8 before you use.
 
 ## Troubleshooting
 
+You must know that Unpretty Soup is expected to parse as many tags and accept as many non-standard webpages as it could. Therefore, Unpretty Soup is not designed to be fully conforming to HTML 5.3 standard section 8.2. You must bear in mind that results may sometimes vary minorly yet trivial.
+
+As for performance issues, you might consider switching to Beautiful Soup 4 on Python, lxml on Python or other parsing libraries for C++.
+
 ## Contribution
+
+You can fork a new branch on GitHub and make pull requests. We are open to contributions and are welcome to new features.
 
 ## License
 
