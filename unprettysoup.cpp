@@ -1789,6 +1789,7 @@ bool us3::ElementParser::get_doctype(
     }
     result = new us3::Element();
     result->type = Doctype;
+    result->name = "[doctype]";
     result->content = page.substr(pos + 9, npos - 1).strip();
     pos = npos + 1;
     return true;
@@ -1822,6 +1823,7 @@ bool us3::ElementParser::get_tag(
         // Insert NavigableString element
         us3::Element *s_elem = new us3::Element();
         s_elem->type = NavigableString;
+        s_elem->name = "[string]";
         s_elem->content = str;
         s_elem->p_parent = result;
         result->p_children.push_back(s_elem);
@@ -2012,6 +2014,7 @@ bool us3::ElementParser::get_comment(
     int npos = page.find("-->", pos);
     result = new us3::Element();
     result->type = Comment;
+    result->name = "[comment]";
     if (npos == -1) {
         result->content = page.substr(pos, page.length() - 1).strip();
         pos = page.length();
@@ -2075,10 +2078,9 @@ int main()
 {
     ifstream fin("juruo.html");
     auto soup = UnprettySoup(fin);
-    auto lst = soup->find_all("a");
+    auto lst = soup->descendants();
     for (auto elem : lst) {
-        cout << elem->name.repr() << "\n";
+        cout << elem->name.repr() << " " << elem->content.repr() << "\n";
     }
-    cout << soup->find()->name.repr() << "\n";
     return 0;
 }
