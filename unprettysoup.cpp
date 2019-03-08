@@ -436,7 +436,7 @@ public:
     }
 } chardet_table;
 
-void us3::Char::from_string(std::string bstr, int& pos)
+void us3::Char::from_string(const std::string& bstr, int& pos)
 {
     this->value = 0;
     if (pos > bstr.length() - 1)
@@ -481,7 +481,7 @@ void us3::Char::from_string(std::string bstr, int& pos)
 std::string us3::Char::to_string(void) const
 {
     unsigned int value = this->value;
-    std::string output = "";
+    std::string output;
     if (value >= 0x0000 && value <= 0x007f) {
         output += char((value & 0x7f) ^ 0x00);
     } else if (value >= 0x0080 && value <= 0x07ff) {
@@ -528,14 +528,14 @@ us3::Char::Char(unsigned int value)
     return ;
 }
 
-us3::Char::Char(std::string bstr)
+us3::Char::Char(const std::string& bstr)
 {
     int pos = 0;
     this->from_string(bstr, pos);
     return ; 
 }
 
-us3::Char::Char(std::string bstr, int& pos)
+us3::Char::Char(const std::string& bstr, int& pos)
 {
     this->from_string(bstr, pos);
     return ;
@@ -673,7 +673,7 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::Char& chr)
     return stream;
 }
 
-void us3::String::from_string(std::string str)
+void us3::String::from_string(const std::string& str)
 {
     this->contents.clear();
     int pos = 0;
@@ -698,7 +698,7 @@ us3::String::String(void)
     return ;
 }
 
-us3::String::String(std::string str)
+us3::String::String(const std::string& str)
 {
     this->from_string(str);
     return ;
@@ -1864,7 +1864,15 @@ void us3::Element::prettify(us3::String& buffer, int offset, int indent)
 {
     us3::String ofs_s = us3::String(" ") * offset;
     if (this->type == NavigableString) {
-        us3::String tmp = this->content.replace("\n", " ").strip();
+        us3::String tmp;
+        for (auto line : this->content.split("\n")) {
+            line = line.strip();
+            if (line.length() > 0) {
+                tmp += ofs_s;
+                tmp += line;
+                tmp += "\n";
+            }
+        }
         if (tmp.length() == 0)
             return ;
         buffer += ofs_s;
@@ -2240,7 +2248,7 @@ us3::Element* us3::ElementParser::parse(const us3::String& content)
     this->page += "<document>";
     this->page += content;
     this->page += "</document>";
-    this->page_lower = content.lower();
+    this->page_lower = this->page.lower();
     // Pass this into another method
     us3::Element *dom = new us3::Element();
     int pos = 0;

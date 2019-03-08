@@ -1065,7 +1065,11 @@ out.close()
 
 You must know that Unpretty Soup is expected to parse as many tags and accept as many non-standard webpages as it could. Therefore, the internal Unpretty Soup parser is not designed to be fully conforming to [HTML 5.3 standard section 8.2.4](https://www.w3.org/TR/html53/syntax.html#tokenization). You must bear in mind that results may sometimes vary minorly however trivial.
 
-As for performance issues, you might consider switching to [Beautiful Soup 4](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) on Python, [lxml](https://lxml.de/) on Python or other parsing libraries for C++.
+### Performance Issues
+
+Parsing the [HTML 5.3 chapter 8](https://www.w3.org/TR/html53/syntax.html) page (over 5 megabytes) in Beautiful Soup takes 8.38 seconds on a midstream computer, while Unpretty Soup takes around 10.37 seconds on the same computer. If this 20% performance decrease means everything to you, you should immediately switch to other faster libraries. Considerable alternatives include `libtidy`, `libxml2`, `libxml++` for C++ and `lxml` for Python.
+
+You must acknowledge and bear in mind that Unpretty Soup is only a grungy imitation of Beautiful Soup on C++ and no performance improvements are intended.
 
 ## Contribution
 

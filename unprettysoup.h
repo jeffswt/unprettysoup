@@ -21,15 +21,15 @@ namespace us3
         unsigned int value;
     public:
         // Converters
-        void from_string(std::string, int&);
+        void from_string(const std::string&, int&);
         std::string to_string(void) const;
         // Initializers
         Char(void);
         Char(char);
         Char(int);
         Char(unsigned int);
-        Char(std::string);
-        Char(std::string, int&);
+        Char(const std::string&);
+        Char(const std::string&, int&);
         // Comparison operators
         bool operator == (const Char&) const;
         bool operator != (const Char&) const;
@@ -63,11 +63,11 @@ namespace us3
         std::basic_string<Char> contents;
     public:
         // Converters
-        void from_string(std::string);
+        void from_string(const std::string&);
         std::string to_string(void) const;
         // Initializers
         String(void);
-        String(std::string);
+        String(const std::string&);
         String(char*);
         String(const char*);
         String(Char);
