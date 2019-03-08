@@ -256,6 +256,7 @@ namespace us3
 
     std::ostream& operator << (std::ostream&, ElementType);
     std::ostream& operator << (std::ostream&, Element*);
+    std::ostream& operator << (std::ostream&, std::vector<Element*>);
 
     Element* UnprettySoup(const String&);
     Element* UnprettySoup(std::istream&);

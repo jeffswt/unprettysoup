@@ -1542,7 +1542,7 @@ void us3::Element::find_all(
         return ;
     bool can_push = true;
     // Checking this tag using function
-    if (!tag_check_func(this))
+    if (this->parent == nullptr || !tag_check_func(this))
         can_push = false;
     // Checking according to attributes
     if (can_push) {
@@ -1816,7 +1816,7 @@ void us3::Element::to_string(us3::String& buffer)
     } else if (this->type == Doctype) {
         buffer += "<!DOCTYPE ";
         buffer += this->content;
-        buffer += ">\n";
+        buffer += ">";
     } else if (this->type == Comment) {
         buffer += "<!-- ";
         buffer += this->content;
@@ -1879,7 +1879,7 @@ void us3::Element::prettify(us3::String& buffer, int offset, int indent)
         buffer += ofs_s;
         buffer += "<!DOCTYPE ";
         buffer += this->content.replace("\n", " ").strip();
-        buffer += ">\n";
+        buffer += ">";
         return ;
     } else if (this->type == Comment) {
         buffer += ofs_s;
@@ -1928,7 +1928,7 @@ us3::String us3::Element::prettify(int indent = 1)
 {
     us3::String buffer;
     this->prettify(buffer, 0, indent);
-    return buffer;
+    return buffer.strip();
 }
 
 bool us3::ElementParser::get_string(
@@ -1953,12 +1953,16 @@ bool us3::ElementParser::get_element(
     // Detect element type
     us3::ElementType typ = CorruptedTag;
     if (page[pos] == '<') {
-        if (page[pos + 1] != '!')
+        if (page[pos + 1] != '!') {
             typ = Tag;
-        if (page[pos + 2] == '-' && page[pos + 3] == '-')
-            typ = Comment;
-        if (page[pos + 1] == '/')
+        } else if (page[pos + 1] == '/') {
             typ = CorruptedTag;
+        } else {
+            if (page[pos + 2] == '-' && page[pos + 3] == '-')
+                typ = Comment;
+            else if (us3::String(page[pos + 2]).upper() == "D")
+                typ = Doctype;
+        }
     } else {
         typ = NavigableString;
     }
@@ -1967,8 +1971,10 @@ bool us3::ElementParser::get_element(
         return this->get_tag(pos, result);
     } else if (typ == Comment) {
         return this->get_comment(pos, result);
-    } else if (typ == CorruptedTag || typ == Doctype) {
+    } else if (typ == CorruptedTag) {
         return this->get_corrupted_tag(pos);
+    } else if (typ == Doctype) {
+        return this->get_doctype(pos, result);
     } else if (typ == NavigableString) {
         us3::String nothing;
         return this->get_string(pos, nothing);
@@ -1980,12 +1986,13 @@ bool us3::ElementParser::get_doctype(
         int& pos,
         us3::Element*& result)
 {
+    
     if (page.substr(pos, pos + 8).upper() != String("<!DOCTYPE")) {
         // This is not a doctype element
         result = nullptr;
         return false;
     }
-    int npos = page.find_first_of(">");
+    int npos = page.find_first_of(">", pos);
     if (npos == -1) {  // Not terminated
         pos = page.length();
         result = nullptr;
@@ -2232,29 +2239,18 @@ bool us3::ElementParser::get_comment(
 
 us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
-    this->page = content;
+    // Neat hack to process the document
+    this->page = "";
+    this->page += "<document>";
+    this->page += content;
+    this->page += "</document>";
     this->page_lower = content.lower();
+    // Pass this into another method
     us3::Element *dom = new us3::Element();
-    us3::String buffer;
     int pos = 0;
+    this->get_element(pos, dom);
     dom->type = Tag;
     dom->name = "[document]";
-    // Parse Doctype first, if there is any
-    us3::Element *doctype;
-    this->get_string(pos, buffer);
-    if (this->get_doctype(pos, doctype)) {
-        doctype->p_parent = dom;
-        dom->p_children.push_back(doctype);
-    }
-    // Parse html tag
-    us3::Element *ehtml;
-    this->get_string(pos, buffer);
-    if (this->get_element(pos, ehtml)) {
-        ehtml->p_parent = dom;
-        dom->p_children.push_back(ehtml);
-    }
-    // Finalize HTML parse
-    this->get_string(pos, buffer);
     dom->p_parent = nullptr;
     return dom;
 }
@@ -2280,6 +2276,17 @@ std::ostream& us3::operator << (std::ostream& stream, us3::Element* elem)
     return stream;
 }
 
+std::ostream& us3::operator << (
+        std::ostream& stream,
+        std::vector<us3::Element*> elems)
+{
+    std::vector<us3::String> reprs;
+    for (auto elem : elems)
+        reprs.push_back(elem->to_string().repr());
+    stream << "[" << us3::String(",\n ").join(reprs) << "]";
+    return stream;
+}
+
 us3::Element* us3::UnprettySoup(const us3::String& str)
 {
     us3::ElementParser parser;
@@ -2292,18 +2299,4 @@ us3::Element* us3::UnprettySoup(std::istream& fin)
     while (std::getline(fin, tmp))
         content += tmp + "\n";
     return us3::UnprettySoup(us3::String(content));
-}
-
-#include <fstream>
-
-using namespace std;
-using namespace us3;
-
-int main()
-{
-    ifstream fin("juruo.html");
-    auto soup = UnprettySoup(fin);
-    cout << soup->find("title") << endl;
-    delete soup;
-    return 0;
 }
