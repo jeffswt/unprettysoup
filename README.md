@@ -1,3 +1,4 @@
+
 # Unpretty Soup
 
 Unpretty Soup is a C++ library for pulling data out of HTML files. It works individually with its **own Unicode (UTF-8) solution** and its **own parser**, to provide simple ways of navigating, searching, <del>and modifying</del> the parsed DOM tree. It commonly saves CS students and programmers days or weeks of work.
@@ -83,9 +84,9 @@ One common task is extracting all the URLs found within a page's `<a>` tags:
 ```C++
 for (auto link : soup->find_all("a"))
     cout << link->get_attr("href") << endl;
-// http://exammple.com/jeffswt
-// http://exammple.com/swt
-// http://exammple.com/juruoswt
+// http://example.com/jeffswt
+// http://example.com/swt
+// http://example.com/juruoswt
 ```
 
 ## Installing Unpretty Soup
@@ -539,7 +540,7 @@ title_tag->parent();
 The title string itself has a parent: the `<title>` tag that contains it:
 
 ```C++
-title_tag->find("[string]")->parent();
+title_tag->string()->parent();
 // <title>The Juruo's story</title>
 ```
 
@@ -624,9 +625,9 @@ sibling_soup->find("c")->next_sibling();
 The strings "text1" and "text2" are not siblings, because they don't have the same parent:
 
 ```C++
-sibling_soup->find("b")->find("[string]");
+sibling_soup->find("b")->string();
 // text1
-sibling_soup->find("b")->find("[string]")->next_sibling();
+sibling_soup->find("b")->string()->next_sibling();
 // nullptr, not text2
 ```
 
@@ -660,7 +661,7 @@ You can iterate over a tag's siblings with `.next_siblings()` or `.previous_sibl
 
 ```C++
 for (auto sibling : soup->find("a")->next_siblings())
-    cout << sibling->repr() << "\n";
+    cout << sibling << endl;
 // ",\n"
 // <a class="juruo" href="http://example.com/swt" id="link2">swt</a>
 // " and\n"
@@ -668,8 +669,10 @@ for (auto sibling : soup->find("a")->next_siblings())
 // "; and they always fail exams."
 // nullptr
 
-// for (auto sibling : soup->find(id="link3")->previous_siblings())
-//     cout << sibling->repr() << "\n";
+map<String, String> mp;
+mp["id"] = "link3";
+for (auto sibling : soup->find(mp)->previous_siblings())
+    cout << sibling << "\n";
 // " and\n"
 // <a class="juruo" href="http://example.com/swt" id="link2">swt</a>
 // ",\n"
@@ -731,7 +734,6 @@ Passing nothing into it matches everything it can. This code finds all the tags 
 ```C++
 for (auto tag : soup->find_all())
     cout << tag->name << endl;
-// [document]
 // html
 // head
 // title
@@ -1046,15 +1048,24 @@ Both of the above functions yield the same result as the original document, apar
 
 ## Encodings
 
-You should preferrably and only use UTF-8 as your encoding.
+You should preferrably and only use [UTF-8](https://www.unicode.org/) as your encoding.
 
-If your document is not, convert it to UTF-8 before you use.
+If your document is not, convert it to UTF-8 before you use. You can use a python script to do this:
+
+```Python
+f = open('webpage.html', 'r')
+s = f.read()
+f.close()
+out = open('webpage_utf8.html', 'w', encoding='utf-8')
+out.write(s)
+out.close()
+```
 
 ## Troubleshooting
 
-You must know that Unpretty Soup is expected to parse as many tags and accept as many non-standard webpages as it could. Therefore, Unpretty Soup is not designed to be fully conforming to HTML 5.3 standard section 8.2. You must bear in mind that results may sometimes vary minorly yet trivial.
+You must know that Unpretty Soup is expected to parse as many tags and accept as many non-standard webpages as it could. Therefore, the internal Unpretty Soup parser is not designed to be fully conforming to [HTML 5.3 standard section 8.2.4](https://www.w3.org/TR/html53/syntax.html#tokenization). You must bear in mind that results may sometimes vary minorly however trivial.
 
-As for performance issues, you might consider switching to Beautiful Soup 4 on Python, lxml on Python or other parsing libraries for C++.
+As for performance issues, you might consider switching to [Beautiful Soup 4](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) on Python, [lxml](https://lxml.de/) on Python or other parsing libraries for C++.
 
 ## Contribution
 
@@ -1085,4 +1096,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
