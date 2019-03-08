@@ -830,8 +830,7 @@ void us3::String::clear(void)
     return ;
 }
 
-int us3::String::count(const us3::String& pattern, int begin = 0,
-                       int end = -1) const
+int us3::String::count(const us3::String& pattern, int begin, int end) const
 {
     int length = this->length(), plen = pattern.length();
     if (plen == 0)
@@ -859,7 +858,7 @@ bool us3::String::endswith(const us3::String& str) const
     return slen <= length && this->substr(length - slen, length - 1) == str;
 }
 
-us3::String us3::String::expandtabs(int tabsize = 4) const
+us3::String us3::String::expandtabs(int tabsize) const
 {
     us3::String result;
     int wpos = 0;
@@ -919,7 +918,7 @@ int us3::String::find(const us3::String& pattern, int* next, int begin) const
     return -1;
 }
 
-int us3::String::find(const us3::String& pattern, int begin = 0) const
+int us3::String::find(const us3::String& pattern, int begin) const
 {
     // Returns -1 if not found
     if (begin + pattern.length() > this->length())
@@ -930,14 +929,14 @@ int us3::String::find(const us3::String& pattern, int begin = 0) const
     return res;
 }
 
-int us3::String::find_first_of(const us3::Char& chr, int begin = 0) const
+int us3::String::find_first_of(const us3::Char& chr, int begin) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_first_of(st, begin);
 }
 
-int us3::String::find_first_of(const us3::String& list, int begin = 0) const
+int us3::String::find_first_of(const us3::String& list, int begin) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -946,7 +945,7 @@ int us3::String::find_first_of(const us3::String& list, int begin = 0) const
 }
 
 int us3::String::find_first_of(const std::set<us3::Char>& list,
-                               int begin = 0) const
+                               int begin) const
 {
     for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) != list.end())
@@ -954,14 +953,14 @@ int us3::String::find_first_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_last_of(const us3::Char& chr, int end = -1) const
+int us3::String::find_last_of(const us3::Char& chr, int end) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_last_of(st, end);
 }
 
-int us3::String::find_last_of(const us3::String& list, int end = -1) const
+int us3::String::find_last_of(const us3::String& list, int end) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -969,8 +968,7 @@ int us3::String::find_last_of(const us3::String& list, int end = -1) const
     return this->find_last_of(st, end);
 }
 
-int us3::String::find_last_of(const std::set<us3::Char>& list,
-                               int end = -1) const
+int us3::String::find_last_of(const std::set<us3::Char>& list, int end) const
 {
     if (end == -1 || end >= this->length())
         end = this->length() - 1;
@@ -980,14 +978,14 @@ int us3::String::find_last_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_first_not_of(const us3::Char& chr, int begin = 0) const
+int us3::String::find_first_not_of(const us3::Char& chr, int begin) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_first_not_of(st, begin);
 }
 
-int us3::String::find_first_not_of(const us3::String& list, int begin = 0) const
+int us3::String::find_first_not_of(const us3::String& list, int begin) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -996,7 +994,7 @@ int us3::String::find_first_not_of(const us3::String& list, int begin = 0) const
 }
 
 int us3::String::find_first_not_of(const std::set<us3::Char>& list,
-                               int begin = 0) const
+                                   int begin) const
 {
     for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) == list.end())
@@ -1004,14 +1002,14 @@ int us3::String::find_first_not_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_last_not_of(const us3::Char& chr, int end = -1) const
+int us3::String::find_last_not_of(const us3::Char& chr, int end) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_last_not_of(st, end);
 }
 
-int us3::String::find_last_not_of(const us3::String& list, int end = -1) const
+int us3::String::find_last_not_of(const us3::String& list, int end) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -1020,7 +1018,7 @@ int us3::String::find_last_not_of(const us3::String& list, int end = -1) const
 }
 
 int us3::String::find_last_not_of(const std::set<us3::Char>& list,
-                               int end = -1) const
+                                  int end) const
 {
     if (end == -1 || end >= this->length())
         end = this->length() - 1;
@@ -1028,58 +1026,6 @@ int us3::String::find_last_not_of(const std::set<us3::Char>& list,
         if (list.find(this->contents[i]) == list.end())
             return i;
     return -1;
-}
-
-us3::String us3::String::ljust(int len,
-                               const us3::Char& chr = us3::Char(' ')) const
-{
-    int alen = this->length();
-    if (len <= alen)
-        return *this;
-    return *this + us3::String(chr) * (len - alen);
-}
-
-us3::String us3::String::lower(void) const
-{
-    us3::String result;
-    for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->contents[i];
-        if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
-            chr = chr - us3::Char('A') + us3::Char('a');
-        result += chr;
-    }
-    return result;
-}
-
-us3::String us3::String::lstrip(void) const
-{
-    return this->lstrip(chardet_table.s_space);
-}
-
-us3::String us3::String::lstrip(const us3::Char& chr) const
-{
-    std::set<us3::Char> st;
-    st.insert(chr);
-    return this->lstrip(st);
-}
-
-us3::String us3::String::lstrip(const us3::String& list) const
-{
-    std::set<us3::Char> st;
-    for (auto i : list.contents)
-        st.insert(i);
-    return this->lstrip(st);
-}
-
-us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
-{
-    int left = 0, right = this->length() - 1;
-    while (left <= right) {
-        if (list.find(this->contents[left]) == list.end())
-            break;
-        left += 1;
-    }
-    return this->substr(left, right);
 }
 
 #define us3_String_isfunc(__name__)    \
@@ -1143,9 +1089,60 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
     return result;
 }
 
+us3::String us3::String::ljust(int len, const us3::Char& chr) const
+{
+    int alen = this->length();
+    if (len <= alen)
+        return *this;
+    return *this + us3::String(chr) * (len - alen);
+}
+
+us3::String us3::String::lower(void) const
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->contents[i];
+        if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
+            chr = chr - us3::Char('A') + us3::Char('a');
+        result += chr;
+    }
+    return result;
+}
+
+us3::String us3::String::lstrip(void) const
+{
+    return this->lstrip(chardet_table.s_space);
+}
+
+us3::String us3::String::lstrip(const us3::Char& chr) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->lstrip(st);
+}
+
+us3::String us3::String::lstrip(const us3::String& list) const
+{
+    std::set<us3::Char> st;
+    for (auto i : list.contents)
+        st.insert(i);
+    return this->lstrip(st);
+}
+
+us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
+{
+    int left = 0, right = this->length() - 1;
+    while (left <= right) {
+        if (list.find(this->contents[left]) == list.end())
+            break;
+        left += 1;
+    }
+    return this->substr(left, right);
+}
+
 us3::String us3::String::replace(const us3::String& pattern,
                                  const us3::String& replace,
-                                 int count = 0) const
+                                 int count) const
 {
     // Leave count <= 0 to replace all occurences, elsewise replace the first
     // (count) occurences.
@@ -1174,8 +1171,7 @@ us3::String us3::String::reversed(void) const
     return result;
 }
 
-us3::String us3::String::rjust(int len,
-                               const us3::Char& chr = us3::Char(' ')) const
+us3::String us3::String::rjust(int len, const us3::Char& chr) const
 {
     int alen = this->length();
     if (len <= alen)
@@ -1366,13 +1362,13 @@ void us3::Element::del_attr(const us3::String& str)
 }
 
 std::vector<us3::Element*> us3::Element::contents(
-        bool show_empty_strings = false)
+        bool show_empty_strings)
 {
     return this->children(show_empty_strings);
 }
 
 std::vector<us3::Element*> us3::Element::children(
-        bool show_empty_strings = false)
+        bool show_empty_strings)
 {
     std::vector<us3::Element*> vec;
     for (auto elem : this->p_children) {
@@ -1388,7 +1384,7 @@ std::vector<us3::Element*> us3::Element::children(
 
 void us3::Element::descendants(
         std::vector<us3::Element*>& vec,
-        bool show_empty_strings = false)
+        bool show_empty_strings)
 {
     for (auto elem : this->p_children) {
         if (elem->type == NavigableString) {
@@ -1405,7 +1401,7 @@ void us3::Element::descendants(
 }
 
 std::vector<us3::Element*> us3::Element::descendants(
-        bool show_empty_strings = false)
+        bool show_empty_strings)
 {
     std::vector<us3::Element*> vec;
     this->descendants(vec, show_empty_strings);
@@ -1438,7 +1434,7 @@ void us3::Element::strings(
 }
 
 std::vector<us3::Element*> us3::Element::strings(
-        bool show_empty_strings = false)
+        bool show_empty_strings)
 {
     std::vector<us3::Element*> vec;
     this->strings(vec, show_empty_strings);
@@ -1462,7 +1458,7 @@ us3::Element* us3::Element::parent(void)
     return this->p_parent;
 }
 
-std::vector<us3::Element*> us3::Element::parents(int limit = 0)
+std::vector<us3::Element*> us3::Element::parents(int limit)
 {
     std::vector<us3::Element*> vec;
     us3::Element* elem = this;
@@ -1489,7 +1485,7 @@ us3::Element* us3::Element::previous_sibling(void)
     return vec[0];
 }
 
-std::vector<us3::Element*> us3::Element::next_siblings(int limit = 0)
+std::vector<us3::Element*> us3::Element::next_siblings(int limit)
 {
     std::vector<us3::Element*> vec;
     us3::Element *par = this->parent();
@@ -1510,7 +1506,7 @@ std::vector<us3::Element*> us3::Element::next_siblings(int limit = 0)
     return vec;
 }
 
-std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
+std::vector<us3::Element*> us3::Element::previous_siblings(int limit)
 {
     std::vector<us3::Element*> vec;
     us3::Element *par = this->parent();
@@ -1534,15 +1530,15 @@ std::vector<us3::Element*> us3::Element::previous_siblings(int limit = 0)
 void us3::Element::find_all(
         std::vector<us3::Element*>& vec,
         std::function<bool(Element*)> tag_check_func,
-        std::map<String, String> attrs,
-        int recursive = 1,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        int recursive,
+        int limit)
 {
     if (this->type != Tag)
         return ;
     bool can_push = true;
     // Checking this tag using function
-    if (this->parent == nullptr || !tag_check_func(this))
+    if (this->p_parent == nullptr || !tag_check_func(this))
         can_push = false;
     // Checking according to attributes
     if (can_push) {
@@ -1591,9 +1587,9 @@ void us3::Element::find_all(
 
 std::vector<us3::Element*> us3::Element::find_all(
         std::function<bool(Element*)> tag_check_func,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
 {
     std::vector<us3::Element*> vec;
     this->find_all(vec, tag_check_func, attrs, recursive ? 1 : 0, limit);
@@ -1602,9 +1598,9 @@ std::vector<us3::Element*> us3::Element::find_all(
 
 std::vector<us3::Element*> us3::Element::find_all(
         const std::set<us3::String>& tags,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
 {
     auto check_func = [&tags](const us3::Element* elem) {
         if (tags.find(elem->name) != tags.end())
@@ -1616,9 +1612,9 @@ std::vector<us3::Element*> us3::Element::find_all(
 
 std::vector<us3::Element*> us3::Element::find_all(
         const std::vector<us3::String>& tags,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
 {
     std::set<us3::String> st;
     for (auto str : tags)
@@ -1628,9 +1624,9 @@ std::vector<us3::Element*> us3::Element::find_all(
 
 std::vector<us3::Element*> us3::Element::find_all(
         const us3::String& tag,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
 {
     std::set<us3::String> st;
     st.insert(tag);
@@ -1638,9 +1634,9 @@ std::vector<us3::Element*> us3::Element::find_all(
 }
 
 std::vector<us3::Element*> us3::Element::find_all(
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true,
-        int limit = 0)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
 {
     std::function<bool(us3::Element*)> check_func =
     [](const us3::Element* elem) {
@@ -1651,8 +1647,8 @@ std::vector<us3::Element*> us3::Element::find_all(
 
 us3::Element* us3::Element::find(
         std::function<bool(Element*)> tag_check_func,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all(tag_check_func, attrs,
                                                     recursive, 1);
@@ -1663,8 +1659,8 @@ us3::Element* us3::Element::find(
 
 us3::Element* us3::Element::find(
         const std::set<us3::String>& tags,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
     if (vec.size() == 0)
@@ -1674,8 +1670,8 @@ us3::Element* us3::Element::find(
 
 us3::Element* us3::Element::find(
         const std::vector<us3::String>& tags,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
     if (vec.size() == 0)
@@ -1685,8 +1681,8 @@ us3::Element* us3::Element::find(
 
 us3::Element* us3::Element::find(
         const us3::String& tag,
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all(tag, attrs, recursive, 1);
     if (vec.size() == 0)
@@ -1695,8 +1691,8 @@ us3::Element* us3::Element::find(
 }
 
 us3::Element* us3::Element::find(
-        std::map<String, String> attrs = std::map<String, String>(),
-        bool recursive = true)
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all(attrs, recursive, 1);
     if (vec.size() == 0)
@@ -1707,8 +1703,8 @@ us3::Element* us3::Element::find(
 void us3::Element::find_all_s(
         std::vector<us3::Element*>& vec,
         std::function<bool(const us3::String&)> check_func,
-        bool recursive = true,
-        int limit = 0)
+        bool recursive,
+        int limit)
 {
     if (this->type == NavigableString) {
         if (this->content.length() > 0 && check_func(this->content))
@@ -1726,8 +1722,8 @@ void us3::Element::find_all_s(
 
 std::vector<us3::Element*> us3::Element::find_all_s(
         std::function<bool(const us3::String&)> check_func,
-        bool recursive = true,
-        int limit = 0)
+        bool recursive,
+        int limit)
 {
     std::vector<us3::Element*> vec;
     this->find_all_s(vec, check_func, recursive, limit);
@@ -1736,8 +1732,8 @@ std::vector<us3::Element*> us3::Element::find_all_s(
 
 std::vector<us3::Element*> us3::Element::find_all_s(
         const std::set<us3::String>& check_set,
-        bool recursive = true,
-        int limit = 0)
+        bool recursive,
+        int limit)
 {
     auto check_func = [&check_set](const us3::String& str) {
         for (auto pattern : check_set)
@@ -1750,8 +1746,8 @@ std::vector<us3::Element*> us3::Element::find_all_s(
 
 std::vector<us3::Element*> us3::Element::find_all_s(
         const std::vector<us3::String>& check_list,
-        bool recursive = true,
-        int limit = 0)
+        bool recursive,
+        int limit)
 {
     std::set<us3::String> st;
     for (auto str : check_list)
@@ -1761,8 +1757,8 @@ std::vector<us3::Element*> us3::Element::find_all_s(
 
 std::vector<us3::Element*> us3::Element::find_all_s(
         const us3::String& check_str,
-        bool recursive = true,
-        int limit = 0)
+        bool recursive,
+        int limit)
 {
     std::set<us3::String> st;
     st.insert(check_str);
@@ -1771,7 +1767,7 @@ std::vector<us3::Element*> us3::Element::find_all_s(
 
 us3::Element* us3::Element::find_s(
         std::function<bool(const us3::String&)> ch_func,
-        bool recursive = true)
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all_s(ch_func, recursive, 1);
     if (vec.size() == 0)
@@ -1781,7 +1777,7 @@ us3::Element* us3::Element::find_s(
 
 us3::Element* us3::Element::find_s(
         const std::set<us3::String>& str_set,
-        bool recursive = true)
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all_s(str_set, recursive, 1);
     if (vec.size() == 0)
@@ -1791,7 +1787,7 @@ us3::Element* us3::Element::find_s(
 
 us3::Element* us3::Element::find_s(
         const std::vector<us3::String>& str_vec,
-        bool recursive = true)
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all_s(str_vec, recursive, 1);
     if (vec.size() == 0)
@@ -1801,7 +1797,7 @@ us3::Element* us3::Element::find_s(
 
 us3::Element* us3::Element::find_s(
         const us3::String& str,
-        bool recursive = true)
+        bool recursive)
 {
     std::vector<us3::Element*> vec = this->find_all_s(str, recursive, 1);
     if (vec.size() == 0)
@@ -1924,7 +1920,7 @@ void us3::Element::prettify(us3::String& buffer, int offset, int indent)
     return ;
 }
 
-us3::String us3::Element::prettify(int indent = 1)
+us3::String us3::Element::prettify(int indent)
 {
     us3::String buffer;
     this->prettify(buffer, 0, indent);
