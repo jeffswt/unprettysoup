@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include <functional>
 #include <vector>
 #include <set>
 #include <map>
@@ -20,14 +21,15 @@ namespace us3
         unsigned int value;
     public:
         // Converters
-        void from_string(std::string, int&);
+        void from_string(const std::string&, int&);
         std::string to_string(void) const;
         // Initializers
         Char(void);
         Char(char);
+        Char(int);
         Char(unsigned int);
-        Char(std::string);
-        Char(std::string, int&);
+        Char(const std::string&);
+        Char(const std::string&, int&);
         // Comparison operators
         bool operator == (const Char&) const;
         bool operator != (const Char&) const;
@@ -61,11 +63,11 @@ namespace us3
         std::basic_string<Char> contents;
     public:
         // Converters
-        void from_string(std::string);
+        void from_string(const std::string&);
         std::string to_string(void) const;
         // Initializers
         String(void);
-        String(std::string);
+        String(const std::string&);
         String(char*);
         String(const char*);
         String(Char);
@@ -88,24 +90,24 @@ namespace us3
         // Advanced methods (Python)
         String casefold(void) const;  // No Unicode support
         void clear(void);
-        int count(const String&, int, int) const;
+        int count(const String&, int = 0, int = -1) const;
         bool endswith(const String&) const;
-        String expandtabs(int) const;
+        String expandtabs(int = 4) const;
         int* find_kmp_get_next(void) const;
         int find(const String&, int*, int) const;
-        int find(const String&, int) const;
-        int find_first_of(const Char&, int) const;
-        int find_first_of(const String&, int) const;
-        int find_first_of(const std::set<Char>&, int) const;
-        int find_last_of(const Char&, int) const;
-        int find_last_of(const String&, int) const;
-        int find_last_of(const std::set<Char>&, int) const;
-        int find_first_not_of(const Char&, int) const;
-        int find_first_not_of(const String&, int) const;
-        int find_first_not_of(const std::set<Char>&, int) const;
-        int find_last_not_of(const Char&, int) const;
-        int find_last_not_of(const String&, int) const;
-        int find_last_not_of(const std::set<Char>&, int) const;
+        int find(const String&, int = 0) const;
+        int find_first_of(const Char&, int = 0) const;
+        int find_first_of(const String&, int = 0) const;
+        int find_first_of(const std::set<Char>&, int = 0) const;
+        int find_last_of(const Char&, int = -1) const;
+        int find_last_of(const String&, int = -1) const;
+        int find_last_of(const std::set<Char>&, int = -1) const;
+        int find_first_not_of(const Char&, int = 0) const;
+        int find_first_not_of(const String&, int = 0) const;
+        int find_first_not_of(const std::set<Char>&, int = 0) const;
+        int find_last_not_of(const Char&, int = -1) const;
+        int find_last_not_of(const String&, int = -1) const;
+        int find_last_not_of(const std::set<Char>&, int = -1) const;
         bool isalnum(void) const;
         bool isalpha(void) const;
         bool isdecimal(void) const;
@@ -115,15 +117,16 @@ namespace us3
         bool isspace(void) const;
         bool isupper(void) const;
         String join(const std::vector<String>&) const;
-        String ljust(int, const Char&) const;
+        String ljust(int, const Char& = Char(' ')) const;
         String lower(void) const;  // No Unicode support
         String lstrip(void) const;
         String lstrip(const Char&) const;
         String lstrip(const String&) const;
         String lstrip(const std::set<Char>&) const;
-        String replace(const String&, const String&, int) const;
+        String replace(const String&, const String&, int = 0) const;
+        String repr(void) const;
         String reversed(void) const;
-        String rjust(int, const Char&) const;
+        String rjust(int, const Char& = Char(' ')) const;
         String rstrip(void) const;
         String rstrip(const Char&) const;
         String rstrip(const String&) const;
@@ -159,26 +162,92 @@ namespace us3
     class Element
     {
     protected:
-    public:
-        // Data
-        ElementType p_type;  // Element type
-        String p_content;  // Contents [Doctype, NavigableString, Comment]
-        std::map<String, String> p_attrs;  // Element attributes [Tag]
         // Relations
         Element* p_parent;
-        std::vector<Element*> p_descendants;
+        std::vector<Element*> p_children;
     public:
+        ElementType type;  // Element type
         String name;  // Element name [Tag]
-        // Initializers
+        String content;  // String content [Doctype, NavigableString, Comment]
+        std::map<String, String> attrs;  // Element attributes [Tag]
+        // Initializers, destructors
         Element(void);
+        ~Element(void);
         // Data access functions
-        // String& operator [] (const String&) const;
-        // bool attrs_has(const String&);
-        // String attrs_get(const String&) const;
-        // void attrs_set(const String&, const String&);
+        bool has_attr(const String&);
+        String get_attr(const String&);
+        void set_attr(const String&, const String&);
+        void del_attr(const String&);
+        // Traversal functions
+        std::vector<Element*> contents(bool = false);
+        std::vector<Element*> children(bool = false);
+        void descendants(std::vector<Element*>&, bool);
+        std::vector<Element*> descendants(bool = false);
+        Element* string(void);
+        void strings(std::vector<Element*>&, bool);
+        std::vector<Element*> strings(bool = false);
+        std::vector<String> stripped_strings(void);
+        Element* parent(void);
+        std::vector<Element*> parents(int = 0);
+        Element* next_sibling(void);
+        Element* previous_sibling(void);
+        std::vector<Element*> next_siblings(int = 0);
+        std::vector<Element*> previous_siblings(int = 0);
         // Element query functions
+        void find_all(std::vector<Element*>&, std::function<bool(Element*)>,
+                      std::map<String, String>, int, int);
+        std::vector<Element*> find_all(std::function<bool(Element*)>,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true, int = 0);
+        std::vector<Element*> find_all(const std::set<String>&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true, int = 0);
+        std::vector<Element*> find_all(const std::vector<String>&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true, int = 0);
+        std::vector<Element*> find_all(const String&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true, int = 0);
+        std::vector<Element*> find_all(
+                std::map<String, String> = std::map<String, String>(),
+                bool = true, int = 0);
+        Element* find(std::function<bool(Element*)>,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true);
+        Element* find(const std::set<String>&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true);
+        Element* find(const std::vector<String>&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true);
+        Element* find(const String&,
+                std::map<String, String> = std::map<String, String>(),
+                bool = true);
+        Element* find(std::map<String, String> = std::map<String, String>(),
+                bool = true);
+        // String query functions
+        void find_all_s(std::vector<Element*>&,
+                std::function<bool(const String&)>, bool, int);
+        std::vector<Element*> find_all_s(std::function<bool(const String&)>,
+                bool = true, int = 0);
+        std::vector<Element*> find_all_s(const std::set<String>&, bool = true,
+                int = 0);
+        std::vector<Element*> find_all_s(const std::vector<String>&,
+                bool = true, int = 0);
+        std::vector<Element*> find_all_s(const String&, bool = true, int = 0);
+        Element* find_s(std::function<bool(const String&)>, bool = true);
+        Element* find_s(const std::set<String>&, bool = true);
+        Element* find_s(const std::vector<String>&, bool = true);
+        Element* find_s(const String&, bool = true);
         // Element modification functions
+        // Output functions
+        void to_string(String&);
+        String to_string(void);
+        void prettify(String&, int, int);
+        String prettify(int = 1);
+        
         // Friends
+        friend std::ostream& operator << (std::ostream&, Element);
         friend class ElementParser;
     };
 
@@ -199,7 +268,12 @@ namespace us3
         friend Element* UnprettySoup(const String&);
     };  // You should not use this
 
+    std::ostream& operator << (std::ostream&, ElementType);
+    std::ostream& operator << (std::ostream&, Element*);
+    std::ostream& operator << (std::ostream&, std::vector<Element*>);
+
     Element* UnprettySoup(const String&);
+    Element* UnprettySoup(std::istream&);
 } // us3
 
 #endif

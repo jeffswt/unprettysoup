@@ -436,7 +436,7 @@ public:
     }
 } chardet_table;
 
-void us3::Char::from_string(std::string bstr, int& pos)
+void us3::Char::from_string(const std::string& bstr, int& pos)
 {
     this->value = 0;
     if (pos > bstr.length() - 1)
@@ -481,7 +481,7 @@ void us3::Char::from_string(std::string bstr, int& pos)
 std::string us3::Char::to_string(void) const
 {
     unsigned int value = this->value;
-    std::string output = "";
+    std::string output;
     if (value >= 0x0000 && value <= 0x007f) {
         output += char((value & 0x7f) ^ 0x00);
     } else if (value >= 0x0080 && value <= 0x07ff) {
@@ -512,20 +512,30 @@ us3::Char::Char(char value)
     return ;
 }
 
-us3::Char::Char(unsigned int value)
+us3::Char::Char(int value)
 {
+    if (value > 0x10ffff || value < 0x00)
+        value = 0x00;
     this->value = value;
     return ;
 }
 
-us3::Char::Char(std::string bstr)
+us3::Char::Char(unsigned int value)
+{
+    if (value > 0x10ffff)
+        value = 0x00;
+    this->value = value;
+    return ;
+}
+
+us3::Char::Char(const std::string& bstr)
 {
     int pos = 0;
     this->from_string(bstr, pos);
     return ; 
 }
 
-us3::Char::Char(std::string bstr, int& pos)
+us3::Char::Char(const std::string& bstr, int& pos)
 {
     this->from_string(bstr, pos);
     return ;
@@ -663,7 +673,7 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::Char& chr)
     return stream;
 }
 
-void us3::String::from_string(std::string str)
+void us3::String::from_string(const std::string& str)
 {
     this->contents.clear();
     int pos = 0;
@@ -688,7 +698,7 @@ us3::String::String(void)
     return ;
 }
 
-us3::String::String(std::string str)
+us3::String::String(const std::string& str)
 {
     this->from_string(str);
     return ;
@@ -820,8 +830,7 @@ void us3::String::clear(void)
     return ;
 }
 
-int us3::String::count(const us3::String& pattern, int begin = 0,
-                       int end = -1) const
+int us3::String::count(const us3::String& pattern, int begin, int end) const
 {
     int length = this->length(), plen = pattern.length();
     if (plen == 0)
@@ -849,7 +858,7 @@ bool us3::String::endswith(const us3::String& str) const
     return slen <= length && this->substr(length - slen, length - 1) == str;
 }
 
-us3::String us3::String::expandtabs(int tabsize = 4) const
+us3::String us3::String::expandtabs(int tabsize) const
 {
     us3::String result;
     int wpos = 0;
@@ -909,7 +918,7 @@ int us3::String::find(const us3::String& pattern, int* next, int begin) const
     return -1;
 }
 
-int us3::String::find(const us3::String& pattern, int begin = 0) const
+int us3::String::find(const us3::String& pattern, int begin) const
 {
     // Returns -1 if not found
     if (begin + pattern.length() > this->length())
@@ -920,14 +929,14 @@ int us3::String::find(const us3::String& pattern, int begin = 0) const
     return res;
 }
 
-int us3::String::find_first_of(const us3::Char& chr, int begin = 0) const
+int us3::String::find_first_of(const us3::Char& chr, int begin) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_first_of(st, begin);
 }
 
-int us3::String::find_first_of(const us3::String& list, int begin = 0) const
+int us3::String::find_first_of(const us3::String& list, int begin) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -936,7 +945,7 @@ int us3::String::find_first_of(const us3::String& list, int begin = 0) const
 }
 
 int us3::String::find_first_of(const std::set<us3::Char>& list,
-                               int begin = 0) const
+                               int begin) const
 {
     for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) != list.end())
@@ -944,14 +953,14 @@ int us3::String::find_first_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_last_of(const us3::Char& chr, int end = -1) const
+int us3::String::find_last_of(const us3::Char& chr, int end) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_last_of(st, end);
 }
 
-int us3::String::find_last_of(const us3::String& list, int end = -1) const
+int us3::String::find_last_of(const us3::String& list, int end) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -959,8 +968,7 @@ int us3::String::find_last_of(const us3::String& list, int end = -1) const
     return this->find_last_of(st, end);
 }
 
-int us3::String::find_last_of(const std::set<us3::Char>& list,
-                               int end = -1) const
+int us3::String::find_last_of(const std::set<us3::Char>& list, int end) const
 {
     if (end == -1 || end >= this->length())
         end = this->length() - 1;
@@ -970,14 +978,14 @@ int us3::String::find_last_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_first_not_of(const us3::Char& chr, int begin = 0) const
+int us3::String::find_first_not_of(const us3::Char& chr, int begin) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_first_not_of(st, begin);
 }
 
-int us3::String::find_first_not_of(const us3::String& list, int begin = 0) const
+int us3::String::find_first_not_of(const us3::String& list, int begin) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -986,7 +994,7 @@ int us3::String::find_first_not_of(const us3::String& list, int begin = 0) const
 }
 
 int us3::String::find_first_not_of(const std::set<us3::Char>& list,
-                               int begin = 0) const
+                                   int begin) const
 {
     for (int i = std::max(begin, 0); i < this->length(); i++)
         if (list.find(this->contents[i]) == list.end())
@@ -994,14 +1002,14 @@ int us3::String::find_first_not_of(const std::set<us3::Char>& list,
     return -1;
 }
 
-int us3::String::find_last_not_of(const us3::Char& chr, int end = -1) const
+int us3::String::find_last_not_of(const us3::Char& chr, int end) const
 {
     std::set<us3::Char> st;
     st.insert(chr);
     return this->find_last_not_of(st, end);
 }
 
-int us3::String::find_last_not_of(const us3::String& list, int end = -1) const
+int us3::String::find_last_not_of(const us3::String& list, int end) const
 {
     std::set<us3::Char> st;
     for (auto chr : list.contents)
@@ -1010,7 +1018,7 @@ int us3::String::find_last_not_of(const us3::String& list, int end = -1) const
 }
 
 int us3::String::find_last_not_of(const std::set<us3::Char>& list,
-                               int end = -1) const
+                                  int end) const
 {
     if (end == -1 || end >= this->length())
         end = this->length() - 1;
@@ -1018,58 +1026,6 @@ int us3::String::find_last_not_of(const std::set<us3::Char>& list,
         if (list.find(this->contents[i]) == list.end())
             return i;
     return -1;
-}
-
-us3::String us3::String::ljust(int len,
-                               const us3::Char& chr = us3::Char(' ')) const
-{
-    int alen = this->length();
-    if (len <= alen)
-        return *this;
-    return *this + us3::String(chr) * (len - alen);
-}
-
-us3::String us3::String::lower(void) const
-{
-    us3::String result;
-    for (int i = 0; i < this->length(); i++) {
-        us3::Char chr = this->contents[i];
-        if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
-            chr = chr - us3::Char('A') + us3::Char('a');
-        result += chr;
-    }
-    return result;
-}
-
-us3::String us3::String::lstrip(void) const
-{
-    return this->lstrip(chardet_table.s_space);
-}
-
-us3::String us3::String::lstrip(const us3::Char& chr) const
-{
-    std::set<us3::Char> st;
-    st.insert(chr);
-    return this->lstrip(st);
-}
-
-us3::String us3::String::lstrip(const us3::String& list) const
-{
-    std::set<us3::Char> st;
-    for (auto i : list.contents)
-        st.insert(i);
-    return this->lstrip(st);
-}
-
-us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
-{
-    int left = 0, right = this->length() - 1;
-    while (left <= right) {
-        if (list.find(this->contents[left]) == list.end())
-            break;
-        left += 1;
-    }
-    return this->substr(left, right);
 }
 
 #define us3_String_isfunc(__name__)    \
@@ -1133,9 +1089,60 @@ us3::String us3::String::join(const std::vector<us3::String>& list) const
     return result;
 }
 
+us3::String us3::String::ljust(int len, const us3::Char& chr) const
+{
+    int alen = this->length();
+    if (len <= alen)
+        return *this;
+    return *this + us3::String(chr) * (len - alen);
+}
+
+us3::String us3::String::lower(void) const
+{
+    us3::String result;
+    for (int i = 0; i < this->length(); i++) {
+        us3::Char chr = this->contents[i];
+        if (chr >= us3::Char('A') && chr <= us3::Char('Z'))
+            chr = chr - us3::Char('A') + us3::Char('a');
+        result += chr;
+    }
+    return result;
+}
+
+us3::String us3::String::lstrip(void) const
+{
+    return this->lstrip(chardet_table.s_space);
+}
+
+us3::String us3::String::lstrip(const us3::Char& chr) const
+{
+    std::set<us3::Char> st;
+    st.insert(chr);
+    return this->lstrip(st);
+}
+
+us3::String us3::String::lstrip(const us3::String& list) const
+{
+    std::set<us3::Char> st;
+    for (auto i : list.contents)
+        st.insert(i);
+    return this->lstrip(st);
+}
+
+us3::String us3::String::lstrip(const std::set<us3::Char>& list) const
+{
+    int left = 0, right = this->length() - 1;
+    while (left <= right) {
+        if (list.find(this->contents[left]) == list.end())
+            break;
+        left += 1;
+    }
+    return this->substr(left, right);
+}
+
 us3::String us3::String::replace(const us3::String& pattern,
                                  const us3::String& replace,
-                                 int count = 0) const
+                                 int count) const
 {
     // Leave count <= 0 to replace all occurences, elsewise replace the first
     // (count) occurences.
@@ -1150,6 +1157,12 @@ us3::String us3::String::replace(const us3::String& pattern,
     return result;
 }
 
+us3::String us3::String::repr(void) const
+{
+    return us3::String("\"") + this->replace("\r", "\\r").replace(
+           "\n", "\\n").replace("\"", "\\\"") + us3::String("\"");
+}
+
 us3::String us3::String::reversed(void) const
 {
     us3::String result;
@@ -1158,8 +1171,7 @@ us3::String us3::String::reversed(void) const
     return result;
 }
 
-us3::String us3::String::rjust(int len,
-                               const us3::Char& chr = us3::Char(' ')) const
+us3::String us3::String::rjust(int len, const us3::Char& chr) const
 {
     int alen = this->length();
     if (len <= alen)
@@ -1314,7 +1326,613 @@ std::ostream& us3::operator << (std::ostream& stream, const us3::String& str)
 
 us3::Element::Element(void)
 {
+    this->p_parent = nullptr;
+    this->p_children.clear();
     return ;
+}
+
+us3::Element::~Element(void)
+{
+    for (auto elem : this->p_children)
+        if (elem != nullptr)
+            delete elem;
+    return ;
+}
+
+bool us3::Element::has_attr(const us3::String& str)
+{
+    return this->attrs.find(str) != this->attrs.end();
+}
+
+us3::String us3::Element::get_attr(const us3::String& str)
+{
+    return this->attrs[str];
+}
+
+void us3::Element::set_attr(const us3::String& str, const us3::String& val)
+{
+    this->attrs[str] = val;
+    return ;
+}
+
+void us3::Element::del_attr(const us3::String& str)
+{
+    this->attrs.erase(str);
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::contents(
+        bool show_empty_strings)
+{
+    return this->children(show_empty_strings);
+}
+
+std::vector<us3::Element*> us3::Element::children(
+        bool show_empty_strings)
+{
+    std::vector<us3::Element*> vec;
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (show_empty_strings || elem->content.length() > 0)
+                vec.push_back(elem);
+        } else {
+            vec.push_back(elem);
+        }
+    }
+    return vec;
+}
+
+void us3::Element::descendants(
+        std::vector<us3::Element*>& vec,
+        bool show_empty_strings)
+{
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (show_empty_strings || elem->content.length() > 0)
+                vec.push_back(elem);
+        } else if (elem->type == Tag) {
+            vec.push_back(elem);
+            elem->descendants(vec, show_empty_strings);
+        } else {
+            vec.push_back(elem);
+        }
+    }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::descendants(
+        bool show_empty_strings)
+{
+    std::vector<us3::Element*> vec;
+    this->descendants(vec, show_empty_strings);
+    return vec;
+}
+
+us3::Element* us3::Element::string(void)
+{
+    if (this->p_children.size() == 1)  // Must be a NavigableString
+        return this->p_children[0];
+    std::vector<us3::Element*> ch = this->children();
+    if (ch.size() == 1)
+        return ch[0]->string();
+    return nullptr;
+}
+
+void us3::Element::strings(
+        std::vector<us3::Element*>& vec,
+        bool show_empty_strings)
+{
+    for (auto elem : this->p_children) {
+        if (elem->type == NavigableString) {
+            if (show_empty_strings || elem->content.length() > 0)
+                vec.push_back(elem);
+        } else if (elem->type == Tag) {
+            elem->strings(vec, show_empty_strings);
+        }
+    }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::strings(
+        bool show_empty_strings)
+{
+    std::vector<us3::Element*> vec;
+    this->strings(vec, show_empty_strings);
+    return vec;
+}
+
+std::vector<us3::String> us3::Element::stripped_strings(void)
+{
+    std::vector<us3::Element*> inp = this->strings();
+    std::vector<us3::String> vec;
+    for (auto elem : inp) {
+        us3::String tmp = elem->content.strip();
+        if (tmp.length() > 0)
+            vec.push_back(tmp);
+    }
+    return vec;
+}
+
+us3::Element* us3::Element::parent(void)
+{
+    return this->p_parent;
+}
+
+std::vector<us3::Element*> us3::Element::parents(int limit)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element* elem = this;
+    do {
+        elem = elem->parent();
+        vec.push_back(elem);
+    } while (elem != nullptr && (limit <= 0 || vec.size() < limit));
+    return vec;
+}
+
+us3::Element* us3::Element::next_sibling(void)
+{
+    std::vector<us3::Element*> vec = this->next_siblings(1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::previous_sibling(void)
+{
+    std::vector<us3::Element*> vec = this->previous_siblings(1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+std::vector<us3::Element*> us3::Element::next_siblings(int limit)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element *par = this->parent();
+    if (par == nullptr)
+        return vec;
+    bool do_push = false;
+    for (int i = 0; i < par->p_children.size(); i++) {
+        if (par->p_children[i] == this) {
+            do_push = true;
+        } else if (do_push) {
+            us3::Element *cur = par->p_children[i];
+            if (cur->type != NavigableString || cur->content.length() > 0)
+                vec.push_back(cur);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::previous_siblings(int limit)
+{
+    std::vector<us3::Element*> vec;
+    us3::Element *par = this->parent();
+    if (par == nullptr)
+        return vec;
+    bool do_push = false;
+    for (int i = par->p_children.size() - 1; i >= 0; i--) {
+        if (par->p_children[i] == this) {
+            do_push = true;
+        } else if (do_push) {
+            us3::Element *cur = par->p_children[i];
+            if (cur->type != NavigableString || cur->content.length() > 0)
+                vec.push_back(cur);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
+    return vec;
+}
+
+void us3::Element::find_all(
+        std::vector<us3::Element*>& vec,
+        std::function<bool(Element*)> tag_check_func,
+        std::map<us3::String, us3::String> attrs,
+        int recursive,
+        int limit)
+{
+    if (this->type != Tag)
+        return ;
+    bool can_push = true;
+    // Checking this tag using function
+    if (this->p_parent == nullptr || !tag_check_func(this))
+        can_push = false;
+    // Checking according to attributes
+    if (can_push) {
+        for (auto attr : attrs) {
+            if (this->attrs.find(attr.first) == this->attrs.end())
+                can_push = false;
+            // Classes should be treated differently
+            if (attr.first == "class") {
+                auto v_s = this->attrs[attr.first].split(" "),
+                     v_p = attr.second.split(" ");
+                // O(log n) query and deduplication
+                std::set<us3::String> s_s;
+                for (auto cls : v_s)
+                    if (cls.length() > 0)
+                        s_s.insert(cls);
+                // Looking up classes
+                for (auto cls : v_p) {
+                    auto lookup = cls.strip();
+                    if (lookup.length() > 0 && s_s.find(lookup) == s_s.end()) {
+                        can_push = false;
+                        break;
+                    }
+                }
+            } else {
+                if (this->attrs[attr.first] != attr.second)
+                    can_push = false;
+            }
+            if (!can_push)
+                break;
+        }
+    }
+    // Push back if okay
+    if (can_push)
+        vec.push_back(this);
+    // Recurse, if available
+    if (recursive >= 0) {
+        int n_recursive = recursive <= 0 ? -1 : 1;
+        for (auto elem : this->p_children) {
+            elem->find_all(vec, tag_check_func, attrs, n_recursive, limit);
+            if (limit > 0 && vec.size() >= limit)
+                break;
+        }
+    }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        std::function<bool(Element*)> tag_check_func,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
+{
+    std::vector<us3::Element*> vec;
+    this->find_all(vec, tag_check_func, attrs, recursive ? 1 : 0, limit);
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const std::set<us3::String>& tags,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
+{
+    auto check_func = [&tags](const us3::Element* elem) {
+        if (tags.find(elem->name) != tags.end())
+            return true;
+        return false;
+    };
+    return this->find_all(check_func, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const std::vector<us3::String>& tags,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
+{
+    std::set<us3::String> st;
+    for (auto str : tags)
+        st.insert(str);
+    return this->find_all(st, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        const us3::String& tag,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
+{
+    std::set<us3::String> st;
+    st.insert(tag);
+    return this->find_all(st, attrs, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all(
+        std::map<us3::String, us3::String> attrs,
+        bool recursive,
+        int limit)
+{
+    std::function<bool(us3::Element*)> check_func =
+    [](const us3::Element* elem) {
+        return true;
+    };
+    return this->find_all(check_func, attrs, recursive, limit);
+}
+
+us3::Element* us3::Element::find(
+        std::function<bool(Element*)> tag_check_func,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all(tag_check_func, attrs,
+                                                    recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const std::set<us3::String>& tags,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const std::vector<us3::String>& tags,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all(tags, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        const us3::String& tag,
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all(tag, attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find(
+        std::map<us3::String, us3::String> attrs,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all(attrs, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+void us3::Element::find_all_s(
+        std::vector<us3::Element*>& vec,
+        std::function<bool(const us3::String&)> check_func,
+        bool recursive,
+        int limit)
+{
+    if (this->type == NavigableString) {
+        if (this->content.length() > 0 && check_func(this->content))
+            vec.push_back(this);
+        return ;
+    }
+    for (auto elem : this->p_children) {
+        if (recursive || elem->type == NavigableString)
+            elem->find_all_s(vec, check_func, recursive, limit);
+        if (limit > 0 && vec.size() >= limit)
+            break;
+    }
+    return ;
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        std::function<bool(const us3::String&)> check_func,
+        bool recursive,
+        int limit)
+{
+    std::vector<us3::Element*> vec;
+    this->find_all_s(vec, check_func, recursive, limit);
+    return vec;
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const std::set<us3::String>& check_set,
+        bool recursive,
+        int limit)
+{
+    auto check_func = [&check_set](const us3::String& str) {
+        for (auto pattern : check_set)
+            if (str.find(pattern) != -1)
+                return true;
+        return false;
+    };
+    return this->find_all_s(check_func, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const std::vector<us3::String>& check_list,
+        bool recursive,
+        int limit)
+{
+    std::set<us3::String> st;
+    for (auto str : check_list)
+        st.insert(str);
+    return this->find_all_s(st, recursive, limit);
+}
+
+std::vector<us3::Element*> us3::Element::find_all_s(
+        const us3::String& check_str,
+        bool recursive,
+        int limit)
+{
+    std::set<us3::String> st;
+    st.insert(check_str);
+    return this->find_all_s(st, recursive, limit);
+}
+
+us3::Element* us3::Element::find_s(
+        std::function<bool(const us3::String&)> ch_func,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(ch_func, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const std::set<us3::String>& str_set,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str_set, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const std::vector<us3::String>& str_vec,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str_vec, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+us3::Element* us3::Element::find_s(
+        const us3::String& str,
+        bool recursive)
+{
+    std::vector<us3::Element*> vec = this->find_all_s(str, recursive, 1);
+    if (vec.size() == 0)
+        return nullptr;
+    return vec[0];
+}
+
+void us3::Element::to_string(us3::String& buffer)
+{
+    if (this->type == NavigableString) {
+        buffer += this->content;
+    } else if (this->type == Doctype) {
+        buffer += "<!DOCTYPE ";
+        buffer += this->content;
+        buffer += ">";
+    } else if (this->type == Comment) {
+        buffer += "<!-- ";
+        buffer += this->content;
+        buffer += " -->";
+    } else if (this->type == Tag) {
+        bool is_void_tag = false;
+        if (chardet_table.sp_name_void.find(this->name) != chardet_table.
+                sp_name_void.end())
+            is_void_tag = true;
+        if (this->p_parent != nullptr) {
+            buffer += "<";
+            buffer += this->name;
+            for (auto attr : this->attrs) {
+                buffer += " ";
+                buffer += attr.first;
+                if (attr.second.length() > 0) {
+                    bool d_quot = attr.second.find_first_of("\"") == -1;
+                    buffer += d_quot ? "=\"" : "=\'";
+                    buffer += attr.second;
+                    buffer += d_quot ? "\"" : "\'";
+                }
+            }
+            if (!is_void_tag) {
+                buffer += ">";
+                for (auto elem : this->p_children)
+                    elem->to_string(buffer);
+                buffer += "</";
+                buffer += this->name;
+                buffer += ">";
+            } else {
+                buffer += " />";
+            }
+        } else {
+            for (auto elem : this->p_children)
+                elem->to_string(buffer);
+        }
+    }
+    return ;
+}
+
+us3::String us3::Element::to_string(void)
+{
+    us3::String buffer;
+    this->to_string(buffer);
+    return buffer;
+}
+
+void us3::Element::prettify(us3::String& buffer, int offset, int indent)
+{
+    us3::String ofs_s = us3::String(" ") * offset;
+    if (this->type == NavigableString) {
+        us3::String tmp;
+        for (auto line : this->content.split("\n")) {
+            line = line.strip();
+            if (line.length() > 0) {
+                tmp += ofs_s;
+                tmp += line;
+                tmp += "\n";
+            }
+        }
+        if (tmp.length() == 0)
+            return ;
+        buffer += ofs_s;
+        buffer += tmp;
+        buffer += "\n";
+        return ;
+    } else if (this->type == Doctype) {
+        buffer += ofs_s;
+        buffer += "<!DOCTYPE ";
+        buffer += this->content.replace("\n", " ").strip();
+        buffer += ">";
+        return ;
+    } else if (this->type == Comment) {
+        buffer += ofs_s;
+        buffer += "<!-- ";
+        buffer += this->content.replace("\n", " ");
+        buffer += " -->\n";
+    } else if (this->type == Tag) {
+        bool is_void_tag = false;
+        if (chardet_table.sp_name_void.find(this->name) != chardet_table.
+                sp_name_void.end())
+            is_void_tag = true;
+        if (this->p_parent != nullptr) {
+            buffer += ofs_s;
+            buffer += "<";
+            buffer += this->name;
+            for (auto attr : this->attrs) {
+                buffer += " ";
+                buffer += attr.first;
+                if (attr.second.length() > 0) {
+                    bool d_quot = attr.second.find_first_of("\"") == -1;
+                    buffer += d_quot ? "=\"" : "=\'";
+                    buffer += attr.second;
+                    buffer += d_quot ? "\"" : "\'";
+                }
+            }
+            if (!is_void_tag) {
+                buffer += ">\n";
+                for (auto elem : this->p_children)
+                    elem->prettify(buffer, offset + indent, indent);
+                buffer += ofs_s;
+                buffer += "</";
+                buffer += this->name;
+                buffer += ">\n";
+            } else {
+                buffer += " />\n";
+            }
+        } else {
+            for (auto elem : this->p_children)
+                elem->prettify(buffer, offset, indent);
+        }
+    }
+    return ;
+}
+
+us3::String us3::Element::prettify(int indent)
+{
+    us3::String buffer;
+    this->prettify(buffer, 0, indent);
+    return buffer.strip();
 }
 
 bool us3::ElementParser::get_string(
@@ -1339,12 +1957,16 @@ bool us3::ElementParser::get_element(
     // Detect element type
     us3::ElementType typ = CorruptedTag;
     if (page[pos] == '<') {
-        if (page[pos + 1] != '!')
+        if (page[pos + 1] != '!') {
             typ = Tag;
-        if (page[pos + 2] == '-' && page[pos + 3] == '-')
-            typ = Comment;
-        if (page[pos + 1] == '/')
+        } else if (page[pos + 1] == '/') {
             typ = CorruptedTag;
+        } else {
+            if (page[pos + 2] == '-' && page[pos + 3] == '-')
+                typ = Comment;
+            else if (us3::String(page[pos + 2]).upper() == "D")
+                typ = Doctype;
+        }
     } else {
         typ = NavigableString;
     }
@@ -1353,8 +1975,10 @@ bool us3::ElementParser::get_element(
         return this->get_tag(pos, result);
     } else if (typ == Comment) {
         return this->get_comment(pos, result);
-    } else if (typ == CorruptedTag || typ == Doctype) {
+    } else if (typ == CorruptedTag) {
         return this->get_corrupted_tag(pos);
+    } else if (typ == Doctype) {
+        return this->get_doctype(pos, result);
     } else if (typ == NavigableString) {
         us3::String nothing;
         return this->get_string(pos, nothing);
@@ -1366,20 +1990,22 @@ bool us3::ElementParser::get_doctype(
         int& pos,
         us3::Element*& result)
 {
+    
     if (page.substr(pos, pos + 8).upper() != String("<!DOCTYPE")) {
         // This is not a doctype element
         result = nullptr;
         return false;
     }
-    int npos = page.find_first_of(">");
+    int npos = page.find_first_of(">", pos);
     if (npos == -1) {  // Not terminated
         pos = page.length();
         result = nullptr;
         return false;
     }
     result = new us3::Element();
-    result->p_type = Doctype;
-    result->p_content = page.substr(pos + 9, npos - 1).strip();
+    result->type = Doctype;
+    result->name = "[doctype]";
+    result->content = page.substr(pos + 9, npos - 1).strip();
     pos = npos + 1;
     return true;
 }
@@ -1389,7 +2015,7 @@ bool us3::ElementParser::get_tag(
         us3::Element*& result)
 {
     result = new us3::Element();
-    result->p_type = Tag;
+    result->type = Tag;
     // Open tag
     bool self_closed = false;
     if (!this->get_tag_open(pos, result, self_closed)) {
@@ -1411,10 +2037,11 @@ bool us3::ElementParser::get_tag(
         this->get_string(pos, str);
         // Insert NavigableString element
         us3::Element *s_elem = new us3::Element();
-        s_elem->p_type = NavigableString;
-        s_elem->p_content = str;
+        s_elem->type = NavigableString;
+        s_elem->name = "[string]";
+        s_elem->content = str;
         s_elem->p_parent = result;
-        result->p_descendants.push_back(s_elem);
+        result->p_children.push_back(s_elem);
         // Encountered close tag
         if (page[pos] == '<' && page[pos + 1] == '/')
             break;
@@ -1422,7 +2049,7 @@ bool us3::ElementParser::get_tag(
         us3::Element *n_elem;
         if (this->get_element(pos, n_elem)) {
             n_elem->p_parent = result;
-            result->p_descendants.push_back(n_elem);
+            result->p_children.push_back(n_elem);
         }
     }
     // Close tag (if open tag is not self-closed)
@@ -1520,7 +2147,7 @@ bool us3::ElementParser::get_tag_open(
             }
         }
         // Inject attribute
-        result->p_attrs[attr_name] = attr_value;
+        result->attrs[attr_name] = attr_value;
     }
     // TODO
     return true;
@@ -1570,10 +2197,10 @@ bool us3::ElementParser::get_tag_raw(
     }
     // Create new NavigableString element to insert into
     us3::Element *cont = new us3::Element();
-    cont->p_type = NavigableString;
-    cont->p_content = page.substr(pos, npos - 1);
+    cont->type = NavigableString;
+    cont->content = page.substr(pos, npos - 1);
     cont->p_parent = result;
-    result->p_descendants.push_back(cont);
+    result->p_children.push_back(cont);
     // Update position
     if (npos < page.length()) {
         pos = page.find_first_of(">", npos);
@@ -1601,45 +2228,67 @@ bool us3::ElementParser::get_comment(
     pos = page.find_first_not_of("-", pos + 4);
     int npos = page.find("-->", pos);
     result = new us3::Element();
-    result->p_type = Comment;
+    result->type = Comment;
+    result->name = "[comment]";
     if (npos == -1) {
-        result->p_content = page.substr(pos, page.length() - 1).strip();
+        result->content = page.substr(pos, page.length() - 1).strip();
         pos = page.length();
         return true;
     }
     int npos2 = page.find_last_not_of("-", npos);
-    result->p_content = page.substr(pos, npos2).strip();
+    result->content = page.substr(pos, npos2).strip();
     pos = npos + 3;
     return true;
 }
 
 us3::Element* us3::ElementParser::parse(const us3::String& content)
 {
-    this->page = content;
-    this->page_lower = content.lower();
+    // Neat hack to process the document
+    this->page = "";
+    this->page += "<document>";
+    this->page += content;
+    this->page += "</document>";
+    this->page_lower = this->page.lower();
+    // Pass this into another method
     us3::Element *dom = new us3::Element();
-    us3::String buffer;
     int pos = 0;
-    dom->p_type = Tag;
+    this->get_element(pos, dom);
+    dom->type = Tag;
     dom->name = "[document]";
-    // Parse Doctype first, if there is any
-    us3::Element *doctype;
-    this->get_string(pos, buffer);
-    if (this->get_doctype(pos, doctype)) {
-        doctype->p_parent = dom;
-        dom->p_descendants.push_back(doctype);
-    }
-    // Parse html tag
-    us3::Element *ehtml;
-    this->get_string(pos, buffer);
-    if (this->get_element(pos, ehtml)) {
-        ehtml->p_parent = dom;
-        dom->p_descendants.push_back(ehtml);
-    }
-    // Finalize HTML parse
-    this->get_string(pos, buffer);
     dom->p_parent = nullptr;
     return dom;
+}
+
+std::ostream& us3::operator << (std::ostream& stream, us3::ElementType typ)
+{
+    if (typ == Doctype)
+        stream << "[doctype]";
+    else if (typ == Tag)
+        stream << "[tag]";
+    else if (typ == CorruptedTag)
+        stream << "[!]";
+    else if (typ == NavigableString)
+        stream << "[string]";
+    else if (typ == Comment)
+        stream << "[comment]";
+    return stream;
+}
+
+std::ostream& us3::operator << (std::ostream& stream, us3::Element* elem)
+{
+    stream << elem->to_string();
+    return stream;
+}
+
+std::ostream& us3::operator << (
+        std::ostream& stream,
+        std::vector<us3::Element*> elems)
+{
+    std::vector<us3::String> reprs;
+    for (auto elem : elems)
+        reprs.push_back(elem->to_string().repr());
+    stream << "[" << us3::String(",\n ").join(reprs) << "]";
+    return stream;
 }
 
 us3::Element* us3::UnprettySoup(const us3::String& str)
@@ -1648,54 +2297,10 @@ us3::Element* us3::UnprettySoup(const us3::String& str)
     return parser.parse(str);
 }
 
-#include <fstream>
-
-using namespace std;
-using namespace us3;
-
-void pstring(String s)
+us3::Element* us3::UnprettySoup(std::istream& fin)
 {
-    s = s.replace("\n", "");
-    int i = 0;
-    while (i < s.length()) {
-        cout << "    " << s.substr(i, i + 79) << "\n";
-        i += 80;
-    }
-    return ;
-}
-
-void dfs(Element* e)
-{
-    if (e->p_type == Tag) {
-        cout << "<class us3.Tag '" << e->name << "'>\n";
-    } else if (e->p_type == Doctype) {
-        cout << "<class us3.Doctype>\n";
-        pstring(e->p_content);
-    } else if (e->p_type == NavigableString) {
-        cout << "<class us3.NavigableString'>:\n";
-        pstring(e->p_content);
-    } else if (e->p_type == Comment) {
-        cout << "<class us3.Comment>\n";
-        pstring(e->p_content);
-    }
-    for (auto p : e->p_attrs) {
-        cout << "    " << p.first << " = " << p.second << "\n";
-    }
-    for (auto q : e->p_descendants)
-        dfs(q);
-    if (e->p_type == Tag)
-        cout << "<end of us3.Tag '" << e->name << "'>\n";
-    return ;
-}
-
-int main()
-{
-    ifstream fin("sample.html");
-    string str = "", tmp;
-    while (getline(fin, tmp))
-        str += tmp + "\n";
-    String s = str;
-    auto elem = UnprettySoup(s);
-    dfs(elem);
-    return 0;
+    std::string content = "", tmp;
+    while (std::getline(fin, tmp))
+        content += tmp + "\n";
+    return us3::UnprettySoup(us3::String(content));
 }
